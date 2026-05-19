@@ -3,19 +3,23 @@ package com.stereowalker.obville.compat;
 import com.stereowalker.obville.Law;
 import com.stereowalker.obville.Laws;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 
 public class QuarkCompat {
 	public static boolean isTable(Block block){
-		return block instanceof vazkii.quark.content.building.block.VariantBookshelfBlock;
+		ResourceLocation key = BuiltInRegistries.BLOCK.getKey(block);
+		return key.getNamespace().equals("quark") && key.getPath().contains("bookshelf");
 	}
 	
 	public static Item equivalentItem(Block block){
-		if (block instanceof vazkii.quark.content.building.block.VariantBookshelfBlock vBlock)
-		return vBlock.asItem();
-		return Items.AIR;
+		ResourceLocation key = BuiltInRegistries.BLOCK.getKey(block);
+		if (key.getNamespace().equals("quark") && key.getPath().contains("bookshelf")) {
+			return BuiltInRegistries.ITEM.get(key);
+		}
+		return net.minecraft.world.item.Items.AIR;
 	}
 	
 	public static Law equivalentLaw(Block block){

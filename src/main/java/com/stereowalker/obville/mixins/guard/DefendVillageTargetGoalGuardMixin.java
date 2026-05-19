@@ -18,7 +18,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
-import tallestegg.guardvillagers.entities.Guard;
+import tallestegg.guardvillagers.common.entities.Guard;
 
 @Mixin(Guard.DefendVillageGuardGoal.class)
 public abstract class DefendVillageTargetGoalGuardMixin {
@@ -35,12 +35,10 @@ public abstract class DefendVillageTargetGoalGuardMixin {
 			return villager.getPlayerReputation(pPlayer);
 	}
 
-
-
 	@Inject(method = "canUse", at = @At("HEAD"))
 	protected void canUseInject(CallbackInfoReturnable<Boolean> cir) {
 		AABB aabb = this.guard.getBoundingBox().inflate(20.0D, 16.0D, 20.0D);
-		List<Player> list1 = this.guard.level.getEntitiesOfClass(Player.class, aabb);
+		List<Player> list1 = this.guard.level().getEntitiesOfClass(Player.class, aabb);
 		
 		for (Player player : list1) {
 			IModdedEntity ent = (IModdedEntity)player;

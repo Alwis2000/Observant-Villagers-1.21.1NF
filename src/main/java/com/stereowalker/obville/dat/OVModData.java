@@ -12,6 +12,7 @@ import com.stereowalker.obville.Crime;
 import com.stereowalker.obville.Law;
 
 import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -32,6 +33,7 @@ public class OVModData extends BaseData {
 	private int cropsBrokenWarning = 0;
 	private int ticker = 0;
 	private int committedBanditry = 0;
+	private int visibleTicks = 0;
 
 	public OVModData() {
 		this.reputation = new HashMap<>();
@@ -77,6 +79,16 @@ public class OVModData extends BaseData {
 			});
 			ticker = 0;
 		}
+
+		if (isInAnyVillage()) {
+			if (visibleTicks < 10) visibleTicks++;
+		} else {
+			if (visibleTicks > 0) visibleTicks--;
+		}
+	}
+	
+	public int getVisibleTicks() {
+		return this.visibleTicks;
 	}
 	
 	public Set<Integer> vill(){
@@ -86,16 +98,16 @@ public class OVModData extends BaseData {
 	/**
 	 * Reads the water data for the player.
 	 */
-	public void read(CompoundTag compound) {
+	public void read(CompoundTag compound, HolderLookup.Provider registries) {
 		if (compound.contains("cropsBrokenWarning", 99)) {
 			ListTag list4 = compound.getList("AllCrimes", 10);
 			for (int i = 0; i < list4.size(); i++) {
 				CompoundTag tag = list4.getCompound(i);
 				ListTag tagList = tag.getList("Crimes", 10);
 				List<Crime> crimes = new ArrayList<>();
-				for (int j = 0; j < tag.size(); j++) {
-					if (tagList.getCompound(i).contains("lawBroken"))
-						crimes.add(Crime.read(tagList.getCompound(i)));
+				for (int j = 0; j < tagList.size(); j++) {
+					if (tagList.getCompound(j).contains("lawBroken"))
+						crimes.add(Crime.read(tagList.getCompound(j), registries));
 				}
 				this.crimesCommited.put(tag.getInt("Village"), crimes);
 			}
@@ -123,13 +135,13 @@ public class OVModData extends BaseData {
 	/**
 	 * Writes the water data for the player.
 	 */
-	public void write(CompoundTag compound) {
+	public void write(CompoundTag compound, HolderLookup.Provider registries) {
 		ListTag list4 = new ListTag();
 		crimesCommited.forEach((village, crimes) -> {
 			CompoundTag tag = new CompoundTag();
 			tag.putInt("Village", village);
 			ListTag listTag = new ListTag();
-			crimes.forEach(crime -> listTag.add(crime.write()));
+			crimes.forEach(crime -> listTag.add(crime.write(registries)));
 			tag.put("Crimes", listTag);
 			list4.add(tag);
 		});

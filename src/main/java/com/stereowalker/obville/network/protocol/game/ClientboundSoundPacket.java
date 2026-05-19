@@ -1,56 +1,49 @@
 package com.stereowalker.obville.network.protocol.game;
 
 import java.util.UUID;
-import java.util.function.Supplier;
-
 import com.stereowalker.obville.sounds.ModSounds;
-
+import com.stereowalker.unionlib.network.protocol.game.ClientboundUnionPacket;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.player.Player;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.fml.DistExecutor;
-import net.minecraftforge.network.NetworkEvent;
 
-public class ClientboundSoundPacket {
-	private boolean positive;
-	private UUID uuid;
+public class ClientboundSoundPacket extends ClientboundUnionPacket {
+	private final boolean positive;
+	private final UUID uuid;
 
-	public ClientboundSoundPacket(
-			final boolean positive,
-			final UUID uuid) {
+	public ClientboundSoundPacket(final boolean positive, final UUID uuid) {
+		super(null);
 		this.uuid = uuid;
 		this.positive = positive;
 	}
 
-	public static void encode(final ClientboundSoundPacket msg, final FriendlyByteBuf packetBuffer) {
-		packetBuffer.writeBoolean(msg.positive);
-		packetBuffer.writeLong(msg.uuid.getMostSignificantBits());
-		packetBuffer.writeLong(msg.uuid.getLeastSignificantBits());
+	public ClientboundSoundPacket(RegistryFriendlyByteBuf packetBuffer) {
+		super(packetBuffer);
+		this.positive = packetBuffer.readBoolean();
+		this.uuid = new UUID(packetBuffer.readLong(), packetBuffer.readLong());
 	}
 
-	public static ClientboundSoundPacket decode(final FriendlyByteBuf packetBuffer) {
-		return new ClientboundSoundPacket(packetBuffer.readBoolean(), new UUID(packetBuffer.readLong(), packetBuffer.readLong()));
+	@Override
+	public void encode(FriendlyByteBuf friendlyByteBuf) {
+		RegistryFriendlyByteBuf packetBuffer = (RegistryFriendlyByteBuf) friendlyByteBuf;
+		packetBuffer.writeBoolean(this.positive);
+		packetBuffer.writeLong(this.uuid.getMostSignificantBits());
+		packetBuffer.writeLong(this.uuid.getLeastSignificantBits());
 	}
 
-	@SuppressWarnings("deprecation")
-	public static void handle(final ClientboundSoundPacket msg, final Supplier<NetworkEvent.Context> contextSupplier) {
-		final NetworkEvent.Context context = contextSupplier.get();
-		context.enqueueWork(() -> DistExecutor.runWhenOn(Dist.CLIENT, () -> () -> {
-			final UUID uuid = msg.uuid;
-			final boolean message = msg.positive;
-			update(message, uuid);
-		}));
-		context.setPacketHandled(true);
-	}
-
-	@SuppressWarnings("resource")
-	@OnlyIn(Dist.CLIENT)
-	public static void update(final boolean message, final UUID uuid) {
-		if (uuid.equals(Player.createPlayerUUID(Minecraft.getInstance().player.getGameProfile()))) {
-			Minecraft.getInstance().player.level.playLocalSound(Minecraft.getInstance().player.getX(), Minecraft.getInstance().player.getY(), Minecraft.getInstance().player.getZ(), message ? ModSounds.POSITIVE : ModSounds.NEGATIVE, SoundSource.PLAYERS, 1, 1, false);
+	@Override
+	public boolean handleOnClient(LocalPlayer player) {
+		if (uuid.equals(player.getUUID())) {
+			player.level().playLocalSound(player.getX(), player.getY(), player.getZ(), positive ? ModSounds.POSITIVE.value().get() : ModSounds.NEGATIVE.value().get(), SoundSource.PLAYERS, 1, 1, false);
 		}
+		return true;
+	}
+
+	@Override
+	public ResourceLocation id() {
+		return ResourceLocation.parse("obville:sound");
 	}
 }

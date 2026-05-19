@@ -44,31 +44,30 @@ import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.HayBlock;
 import net.minecraft.world.level.block.HopperBlock;
-import net.minecraft.world.level.block.MelonBlock;
 import net.minecraft.world.level.block.PumpkinBlock;
 import net.minecraft.world.level.block.entity.BedBlockEntity;
 import net.minecraft.world.level.block.entity.BellBlockEntity;
-import net.minecraft.world.level.levelgen.feature.ConfiguredStructureFeature;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEvent.LivingUpdateEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.BlockEvent.FarmlandTrampleEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.network.NetworkDirection;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.entity.player.CanPlayerSleepEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.level.BlockEvent.FarmlandTrampleEvent;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 
-@EventBusSubscriber
+@EventBusSubscriber(modid = ObVille.MOD_ID)
 public class ModEvents {
 
 	@SubscribeEvent
-	public static void on(PlayerSleepInBedEvent event) {
-		if (event.getPlayer() instanceof ServerPlayer spl) {
+	public static void on(CanPlayerSleepEvent event) {
+		if (event.getEntity() instanceof ServerPlayer spl) {
 			IModdedEntity ent = (IModdedEntity)spl;
 			if (ent.getData().currentVillage() >= 0) {
-				if (spl.level.getBlockEntity(event.getPos()) instanceof BedBlockEntity bed && ((IGeneratableBlockEntity)bed).wasGenerated()) {
-					ObVille.upsetNearby(event.getPlayer(), event.getPlayer().blockPosition(), true, -ObVille.REPUTATION_CONFIG.sleeping_in_bed, null);
+				if (spl.level().getBlockEntity(event.getPos()) instanceof BedBlockEntity bed && ((IGeneratableBlockEntity)bed).wasGenerated()) {
+					ObVille.upsetNearby(event.getEntity(), event.getEntity().blockPosition(), true, -ObVille.REPUTATION_CONFIG.sleeping_in_bed, null);
 				}
 			}
 		}
@@ -109,7 +108,7 @@ public class ModEvents {
 		if (event.getEntity() instanceof ServerPlayer spl) {
 			IModdedEntity ent = (IModdedEntity)spl;
 			if (ent.getData().currentVillage() >= 0) {
-				if (event.getWorld().getBlockState(event.getPos().above()).getBlock() instanceof CropBlock crop) {
+				if (event.getLevel().getBlockState(event.getPos().above()).getBlock() instanceof CropBlock crop) {
 					if (ent.getData().isWatchedForBreakingCrops()) {
 						ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
 						{
@@ -137,7 +136,7 @@ public class ModEvents {
 
 	@SubscribeEvent
 	public static void on(BlockEvent.EntityPlaceEvent event) {
-		if (event.getWorld() instanceof ServerLevel server && event.getEntity() instanceof IModdedEntity mod) {
+		if (event.getLevel() instanceof ServerLevel server && event.getEntity() instanceof IModdedEntity mod) {
 			PlacedBlocks pb = PlacedBlocks.getInstance(server);
 			Runnable r = () -> {
 				pb.playerPlacedBlock(event.getPos());
@@ -146,7 +145,7 @@ public class ModEvents {
 			};
 			if (pb.blockChanges.getOrDefault(event.getPos(), 0) != 2 && mod.getData().currentVillage() >= 0) {
 				Block block = event.getState().getBlock();
-				if (event.getState().getBlock() instanceof MelonBlock) {
+				if (block == Blocks.MELON) {
 					r.run();
 				}
 				else if (event.getState().getBlock() instanceof PumpkinBlock) {
@@ -182,7 +181,7 @@ public class ModEvents {
 				else if (event.getState().getBlock() == Blocks.TORCH || event.getState().getBlock() == Blocks.WALL_TORCH) {
 					r.run();
 				}
-				else if (event.getWorld().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
+				else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
 					r.run();
 				}
 				else if (block == Blocks.LECTERN) r.run();
@@ -210,7 +209,7 @@ public class ModEvents {
 		if (event.getPlayer() instanceof ServerPlayer spl) {
 			IModdedEntity ent = (IModdedEntity)spl;
 			if (ent.getData().currentVillage() >= 0) {
-				PlacedBlocks pb = PlacedBlocks.getInstance(spl.getLevel());
+				PlacedBlocks pb = PlacedBlocks.getInstance((ServerLevel) spl.level());
 				Runnable broke = () -> {
 					pb.blockChanges.remove(event.getPos());
 					pb.setDirty();
@@ -243,7 +242,7 @@ public class ModEvents {
 						ent.getData().watchForBreakingCrops();
 						broke.run();
 					}
-					else if (block instanceof MelonBlock) {
+					else if (block == Blocks.MELON) {
 						if (ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
 						new Crime(Laws.BREAKING_MELONS, new ItemStack(Items.MELON, 2))))
 							broke.run();
@@ -274,7 +273,7 @@ public class ModEvents {
 					}
 					else if (block instanceof FlowerPotBlock pot) {
 						if (ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
-						new Crime(Laws.BREAKING_POT, new ItemStack(Items.FLOWER_POT, 2), new ItemStack(pot.getContent().asItem(), 2))))
+						new Crime(Laws.BREAKING_POT, new ItemStack(Items.FLOWER_POT, 2), new ItemStack(pot.getPotted().asItem(), 2))))
 							broke.run();
 						else replace.run();
 					}
@@ -439,21 +438,21 @@ public class ModEvents {
 						else
 							replace.run();
 					}
-					else if (event.getWorld().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
+					else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
 						if (ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
 						new Crime(Laws.BREAKING_BELLS, new ItemStack(Items.BELL, 2))))
 							broke.run();
 						else
 							replace.run();
 					}
-					else if (event.getWorld().getBlockEntity(event.getPos()) instanceof BedBlockEntity bed) {
+					else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BedBlockEntity bed) {
 						if (((IGeneratableBlockEntity)bed).wasGenerated())
 							ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
 							new Crime(Laws.BREAKING_BED, new ItemStack(Items.WHITE_BED, 1)));
 					}
 				}
 				//Blocks here already have a was generated check
-				if (ObVille.hasWaystones() && WaystonesCompat.isTable(event.getWorld().getBlockEntity(event.getPos()))) {
+				if (ObVille.hasWaystones() && WaystonesCompat.isTable(event.getLevel().getBlockEntity(event.getPos()))) {
 					ObVille.upsetNearby(spl, spl.blockPosition(), true, 0, ()->
 					new Crime(WaystonesCompat.equivalentLaw(event.getState().getBlock()), new ItemStack(event.getState().getBlock().asItem(), 1)));
 				}
@@ -461,45 +460,33 @@ public class ModEvents {
 		}
 	}
 
-	@Nullable
-	public static Pair<BlockPos, Holder<ConfiguredStructureFeature<?, ?>>> findNearestMapFeature(ServerLevel serverlevel, TagKey<ConfiguredStructureFeature<?, ?>> pStructureTag, BlockPos pPos, int pRadius, boolean pSkipExistingChunks) {
-		if (!serverlevel.getServer().getWorldData().worldGenSettings().generateFeatures()) {
-			return null;
-		} else {
-			Optional<HolderSet.Named<ConfiguredStructureFeature<?, ?>>> optional = serverlevel.registryAccess().registryOrThrow(Registry.CONFIGURED_STRUCTURE_FEATURE_REGISTRY).getTag(pStructureTag);
-			if (optional.isEmpty()) {
-				return null;
-			} else {
-				Pair<BlockPos, Holder<ConfiguredStructureFeature<?, ?>>> pair = serverlevel.getChunkSource().getGenerator().findNearestMapFeature(serverlevel, optional.get(), pPos, pRadius, pSkipExistingChunks);
-				return pair != null ? pair : null;
-			}
-		}
-	}
-
 	@SubscribeEvent
-	public static void sendToClient(LivingUpdateEvent event) {
-		if (event.getEntityLiving() != null && !event.getEntityLiving().level.isClientSide && event.getEntityLiving() instanceof ServerPlayer player) {
-			ObVille.getInstance().channel.sendTo(new ClientboundNBTPacket(player), player.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
-			ServerLevel serverlevel = (ServerLevel)player.level;
+	public static void sendToClient(PlayerTickEvent.Post event) {
+		if (event.getEntity() instanceof ServerPlayer player) {
+			ServerLevel serverlevel = (ServerLevel)player.level();
 
 			BlockPos blockpos = player.blockPosition();
 			IModdedEntity ent = (IModdedEntity)player;
 
 			ent.getData().setInVillage(ObVille.determineVillage(serverlevel, blockpos));
 
+			if (player.tickCount % 20 == 0) {
+				new ClientboundNBTPacket(player).send(player);
+			}
 
 			player.getInventory().items.forEach((stack) ->{
 				if (stack.getItem() == Items.PAPER) {
-					if (stack.hasTag() && stack.getTag().contains("obville:to_forgive")) {
+					CustomData customData = stack.get(DataComponents.CUSTOM_DATA);
+					if (customData != null && customData.copyTag().contains("obville:to_forgive")) {
 						stack.setCount(0);
 					}
 				}
 			});
 
 			if (ent.getData().currentVillage() >= 0 && player.tickCount % 20 == 0) {
-				List<VillageLeader> list = player.level.getEntitiesOfClass(VillageLeader.class, player.getBoundingBox().inflate(64.0));
+				List<VillageLeader> list = player.level().getEntitiesOfClass(VillageLeader.class, player.getBoundingBox().inflate(64.0));
 				if (list.isEmpty()) {
-					List<Villager> list2 = player.level.getEntitiesOfClass(Villager.class, player.getBoundingBox().inflate(64.0));
+					List<Villager> list2 = player.level().getEntitiesOfClass(Villager.class, player.getBoundingBox().inflate(64.0));
 					if (!list2.isEmpty()) {
 						if (((ISheep)list2.get(list2.size()-1)).spawnLeaderIfNeeded(serverlevel, 1, 2)) {
 							System.out.println("Spawning New Leader");
@@ -517,11 +504,19 @@ public class ModEvents {
 
 	@SubscribeEvent
 	public static void restoreStats(PlayerEvent.Clone event) {
-		ModdedStats.getOrCreateModNBT(event.getPlayer());
+		ModdedStats.getOrCreateModNBT(event.getEntity());
 		IModdedEntity original = ((IModdedEntity)event.getOriginal());
-		IModdedEntity player = ((IModdedEntity)event.getPlayer());
+		IModdedEntity player = ((IModdedEntity)event.getEntity());
 		player.setData(original.getData());
 		if (!event.isWasDeath()) {
+		}
+	}
+
+	@EventBusSubscriber(modid = ObVille.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
+	public static class ModBusEvents {
+		@SubscribeEvent
+		public static void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
+			event.put(com.stereowalker.obville.world.entity.ModEntities.VILLAGE_CHIEF.value().get(), VillageLeader.createAttributes().build());
 		}
 	}
 }

@@ -8,19 +8,19 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.client.renderer.entity.layers.CrossedArmsItemLayer;
 import net.minecraft.client.renderer.entity.layers.CustomHeadLayer;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
 
 @OnlyIn(Dist.CLIENT)
 public class VillagerChiefRenderer extends MobRenderer<VillageLeader, VillageChiefModel> {
-	private static final ResourceLocation VILLAGER_BASE_SKIN = new ResourceLocation("obville:textures/entity/villager_texture.png");
-	private static final ResourceLocation VILLAGER_BASE_2 = new ResourceLocation("obville:textures/entity/villager_texture_2.png");
-	private static final ResourceLocation VILLAGER_BASE_3 = new ResourceLocation("obville:textures/entity/villager_texture_3.png");
+	private static final ResourceLocation VILLAGER_BASE_SKIN = ResourceLocation.fromNamespaceAndPath("obville", "textures/entity/villager_texture.png");
+	private static final ResourceLocation VILLAGER_BASE_2 = ResourceLocation.fromNamespaceAndPath("obville", "textures/entity/villager_texture_2.png");
+	private static final ResourceLocation VILLAGER_BASE_3 = ResourceLocation.fromNamespaceAndPath("obville", "textures/entity/villager_texture_3.png");
 
 	public VillagerChiefRenderer(EntityRendererProvider.Context p_174437_) {
 		super(p_174437_, new VillageChiefModel(p_174437_.bakeLayer(VillageChiefModel.LAYER_LOCATION)), 0.5F);
-		this.addLayer(new CustomHeadLayer<>(this, p_174437_.getModelSet()));
-		this.addLayer(new CrossedArmsItemLayer<>(this));
+		this.addLayer(new CustomHeadLayer<>(this, p_174437_.getModelSet(), p_174437_.getItemInHandRenderer()));
+		this.addLayer(new CrossedArmsItemLayer<>(this, p_174437_.getItemInHandRenderer()));
 	}
 
 	/**

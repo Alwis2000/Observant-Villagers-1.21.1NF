@@ -9,7 +9,6 @@ import com.stereowalker.obville.ObVille;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.MenuProvider;
 import net.minecraft.world.entity.player.Player;
@@ -27,8 +26,8 @@ public abstract class HopperBlockMixin extends BaseEntityBlock {
 		super(p_49224_);
 	}
 
-	@Inject(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;awardStat(Lnet/minecraft/resources/ResourceLocation;)V"))
-	public void useInject(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, InteractionHand pHand, BlockHitResult pHit, CallbackInfoReturnable<InteractionResult> ci) {
+	@Inject(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Player;awardStat(Lnet/minecraft/resources/ResourceLocation;)V"))
+	public void useInject(BlockState pState, Level pLevel, BlockPos pPos, Player pPlayer, BlockHitResult pHit, CallbackInfoReturnable<InteractionResult> ci) {
 		if (pPlayer instanceof ServerPlayer sPlayer) {
 			MenuProvider menuprovider = this.getMenuProvider(pState, pLevel, pPos);
 			if (menuprovider instanceof HopperBlockEntity hopper) {

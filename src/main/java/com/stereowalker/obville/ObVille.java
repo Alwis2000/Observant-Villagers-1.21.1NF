@@ -25,19 +25,24 @@ import com.stereowalker.obville.network.protocol.game.ClientboundVillagerMessage
 import com.stereowalker.obville.network.protocol.game.ServerboundRelaxPacket;
 import com.stereowalker.obville.world.PlacedBlocks;
 import com.stereowalker.obville.world.effect.Effects;
+import com.stereowalker.obville.sounds.ModSounds;
 import com.stereowalker.obville.world.entity.ModEntities;
+import com.stereowalker.obville.world.entity.ai.memories.ModMemories;
 import com.stereowalker.obville.world.entity.VillageLeader;
 import com.stereowalker.unionlib.client.gui.screens.config.MinecraftModConfigsScreen;
 import com.stereowalker.unionlib.config.ConfigBuilder;
-import com.stereowalker.unionlib.mod.IPacketHolder;
+import com.stereowalker.unionlib.mod.PacketHolder;
 import com.stereowalker.unionlib.mod.MinecraftMod;
-import com.stereowalker.unionlib.network.PacketRegistry;
+import com.stereowalker.unionlib.mod.ClientSegment;
+import com.stereowalker.unionlib.mod.ServerSegment;
+import com.stereowalker.unionlib.api.collectors.PacketCollector;
+import com.stereowalker.unionlib.api.registries.RegistryCollector;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -55,19 +60,16 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.material.Fluid;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.client.ForgeHooksClient;
-import net.minecraftforge.eventbus.api.IEventBus;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.api.distmarker.OnlyIn;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
+import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 
-@Mod(value = "obville")
-public class ObVille extends MinecraftMod implements IPacketHolder {
+@Mod(value = ObVille.MOD_ID)
+public class ObVille extends MinecraftMod implements PacketHolder {
 
 	public static Map<Potion,List<Fluid>> POTION_FLUID_MAP;
 	public static final String MOD_ID = "obville";
@@ -103,39 +105,48 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 		return ModList.get().isLoaded("villagernames");
 	}
 
-	public ObVille() 
+	public ObVille(IEventBus modEventBus) 
 	{
-		super("obville", new ResourceLocation(MOD_ID, "pack.png"), LoadType.BOTH);
+		super("obville", () -> new ClientSegment() {
+			@Override
+			public ResourceLocation getModIcon() {
+				return ResourceLocation.fromNamespaceAndPath(MOD_ID, "pack.png");
+			}
+
+			@Override
+			public Screen getConfigScreen(Minecraft mc, Screen previousScreen) {
+				return new MinecraftModConfigsScreen(previousScreen, Component.translatable("gui.obville.config.title"), MOD_CONFIG, REPUTATION_CONFIG, CLIENT_CONFIG);
+			}
+		}, ServerSegment::new);
+		net.minecraft.world.entity.EntityType.PIG.toString();
 		instance = this;
 		ConfigBuilder.registerConfig(CLIENT_CONFIG);
 		ConfigBuilder.registerConfig(MOD_CONFIG);
 		ConfigBuilder.registerConfig(REPUTATION_CONFIG);
 		ConfigBuilder.registerConfig(LINES_CONFIG);
-		final IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
-		//		modEventBus.addListener(this::setup);
-		modEventBus.addListener(this::clientRegistries);
+		if (net.neoforged.fml.loading.FMLEnvironment.dist == net.neoforged.api.distmarker.Dist.CLIENT) {
+			modEventBus.addListener(this::clientRegistries);
+			modEventBus.addListener(this::registerLayerDefinitions);
+			modEventBus.addListener(GuiHelper::registerOverlays);
+		}
 		Laws.bootstrap();
 	}
 
 	@Override
-	public void registerServerboundPackets(SimpleChannel channel) {
-		PacketRegistry.registerMessage(channel, 0, ServerboundRelaxPacket.class, (packetBuffer) -> {return new ServerboundRelaxPacket(packetBuffer);});
-	}
-
-	@Override
-	public void registerClientboundPackets(SimpleChannel channel) {
-		PacketRegistry.registerMessage(channel, 3, ClientboundOverlayOverridePacket.class, ClientboundOverlayOverridePacket::new);
-		channel.registerMessage(4, ClientboundSoundPacket.class, ClientboundSoundPacket::encode, ClientboundSoundPacket::decode, ClientboundSoundPacket::handle);
-		channel.registerMessage(5, ClientboundNBTPacket.class, ClientboundNBTPacket::encode, ClientboundNBTPacket::decode, ClientboundNBTPacket::handle);
-		PacketRegistry.registerMessage(channel, 6, ClientboundVillagerMessagePacket.class, ClientboundVillagerMessagePacket::new);
+	public void registerPackets(PacketCollector collector) {
+		collector.registerServerboundPacket(ResourceLocation.fromNamespaceAndPath(MOD_ID, "relax"), ServerboundRelaxPacket.class, ServerboundRelaxPacket::new);
+		collector.registerClientboundPacket(ResourceLocation.fromNamespaceAndPath(MOD_ID, "overlay_override"), ClientboundOverlayOverridePacket.class, ClientboundOverlayOverridePacket::new);
+		collector.registerClientboundPacket(ResourceLocation.fromNamespaceAndPath(MOD_ID, "sound"), ClientboundSoundPacket.class, ClientboundSoundPacket::new);
+		collector.registerClientboundPacket(ResourceLocation.fromNamespaceAndPath(MOD_ID, "nbt"), ClientboundNBTPacket.class, ClientboundNBTPacket::new);
+		collector.registerClientboundPacket(ResourceLocation.fromNamespaceAndPath(MOD_ID, "villager_message"), ClientboundVillagerMessagePacket.class, ClientboundVillagerMessagePacket::new);
 	}
 
 	public static boolean isPotentialBandit(Player player) {
-		return player.getItemBySlot(EquipmentSlot.HEAD).getItem() == Items.CARVED_PUMPKIN && !EnchantmentHelper.hasBindingCurse(player.getItemBySlot(EquipmentSlot.HEAD)) ;
+		return player.getItemBySlot(EquipmentSlot.HEAD).getItem() == Items.CARVED_PUMPKIN && !EnchantmentHelper.has(player.getItemBySlot(EquipmentSlot.HEAD), net.minecraft.world.item.enchantment.EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE);
 	}
 
 	public static boolean upsetOnOpen(RandomizableContainerBlockEntity chest, ServerPlayer pPlayer, BlockPos pPos , BlockPos pPos2) {
-		PlacedBlocks pb = PlacedBlocks.getInstance(pPlayer.getLevel());
+		PlacedBlocks pb = PlacedBlocks.getInstance((ServerLevel) pPlayer.level());
 		ILootableBlock loot = (ILootableBlock)chest;
 
 		if (pb.didPlayerPlaceBlock(pPos) && (pPos2 == null || pb.didPlayerPlaceBlock(pPos2))) {
@@ -161,12 +172,6 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 	}
 
 	public static boolean isLookingAtPlayer(LivingEntity guard, Player player) {
-		//		Vec3 vec3 = guard.getViewVector(1.0F).normalize();
-		//        Vec3 vec31 = new Vec3(player.getX() - guard.getX(), player.getEyeY() - guard.getEyeY(), player.getZ() - guard.getZ());
-		//        double d0 = vec31.length();
-		//        vec31 = vec31.normalize();
-		//        double d1 = vec3.dot(vec31);
-		//        return d1 > 1.0D - 0.025D / d0 ? guard.hasLineOfSight(player) : false;
 		return guard.hasLineOfSight(player);
 	}
 
@@ -174,7 +179,7 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 	public static boolean upsetNearby(Player player, BlockPos pos, boolean angerOnlyIfCanSee, int amount, Supplier<Crime> crime) {
 		float distance_from_site = 20;
 		List<Villager> vills = new ArrayList<Villager>();
-		List<Villager> villagersInRange = player.level.getEntitiesOfClass(Villager.class, player.getBoundingBox().inflate(16.0));
+		List<Villager> villagersInRange = player.level().getEntitiesOfClass(Villager.class, player.getBoundingBox().inflate(16.0));
 		villagersInRange.stream().filter(villager -> (
 				!angerOnlyIfCanSee || (((BehaviorUtils.canSee(villager, player) || player.hasEffect(MobEffects.INVISIBILITY)) && villager.hasLineOfSight(player))) && 
 				!((IVillager<Villager>)villager).recentlyTakenBribe().containsKey(player.getUUID()) &&
@@ -191,7 +196,7 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 						villager.setUnhappyCounter(40);
 					}
 				});
-		List<VillageLeader> leaders = player.level.getEntitiesOfClass(VillageLeader.class, player.getBoundingBox().inflate(16.0));
+		List<VillageLeader> leaders = player.level().getEntitiesOfClass(VillageLeader.class, player.getBoundingBox().inflate(16.0));
 		leaders.stream().filter(leader -> !angerOnlyIfCanSee || (BehaviorUtils.canSee(leader, player) && isLookingAtPlayer(leader, player)) || (player.hasEffect(MobEffects.INVISIBILITY) && leader.hasLineOfSight(player))).forEach(chief -> {
 			Brain<VillageLeader> brain = chief.getBrainC();
 			if (brain.getMemory(MemoryModuleType.HOME).isPresent() && brain.getMemory(MemoryModuleType.HOME).get().pos().closerThan(pos, distance_from_site)) {
@@ -220,7 +225,7 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 			List<LivingEntity> b = new ArrayList<LivingEntity>();
 			b.addAll(vills);
 			b.addAll(guardians);
-			List<IronGolem> list2 = player.level.getEntitiesOfClass(IronGolem.class, player.getBoundingBox().inflate(16.0));
+			List<IronGolem> list2 = player.level().getEntitiesOfClass(IronGolem.class, player.getBoundingBox().inflate(16.0));
 			list2.stream().filter(golem -> !angerOnlyIfCanSee || isLookingAtPlayer(golem, player) || BehaviorUtils.canSee(golem, player) || vills.size() > 0).forEach(golem -> {
 				b.add(golem);
 			});
@@ -232,14 +237,9 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 
 					b.forEach(liv -> {
 						if (hasGuardVillagers()) {
-							//							if (liv.getTags().contains("villagernames.named"))
-							//								ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(liv.getCustomName().copy().append(": ").append(new TranslatableComponent("I found a bandit")), player.getUUID()), ((ServerPlayer)player).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
-							//							else
-							//								ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(liv.getName().copy().append(": ").append(new TranslatableComponent("I found a bandit")), player.getUUID()), ((ServerPlayer)player).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 							GuardVillagersCompat.target(liv, player);
 						}
 						if (liv instanceof IronGolem golem) {
-							//							ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(liv.getName().copy().append(": ").append(new TranslatableComponent("I found a bandit")), player.getUUID()), ((ServerPlayer)player).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
 							golem.setTarget(player);
 						}
 					});
@@ -278,8 +278,8 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 						modEn.commitCrime(crimeCommited);
 					}
 					if (player instanceof ServerPlayer serverplayer) {
-						PlacedBlocks pb = PlacedBlocks.getInstance(serverplayer.getLevel());
-						ObVille.getInstance().channel.sendTo(new ClientboundSoundPacket(false, player.getUUID()), serverplayer.connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+						PlacedBlocks pb = PlacedBlocks.getInstance((ServerLevel) serverplayer.level());
+						new ClientboundSoundPacket(false, player.getUUID()).send(serverplayer);
 						if (modEn.IsExiled() && !modEn.reput().generatedBounty) {
 							modEn.reput().generatedBounty = true;
 							pb.villages.get(modEn.currentVillage()).generatedBounties.add(VillageData.bounty(serverplayer, modEn.currentVillage()));
@@ -310,11 +310,7 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 		return false;
 	}
 
-	@Override
-	@OnlyIn(Dist.CLIENT)
-	public Screen getConfigScreen(Minecraft mc, Screen previousScreen) {
-		return new MinecraftModConfigsScreen(previousScreen, new TranslatableComponent("gui.obville.config.title"), MOD_CONFIG, REPUTATION_CONFIG, CLIENT_CONFIG);
-	}
+
 
 	public static int determineVillage(ServerLevel level, BlockPos blockpos) {
 		PlacedBlocks pb = PlacedBlocks.getInstance(level);
@@ -329,20 +325,26 @@ public class ObVille extends MinecraftMod implements IPacketHolder {
 
 	public void clientRegistries(final FMLClientSetupEvent event)
 	{
-		GuiHelper.registerOverlays();
-		ForgeHooksClient.registerLayerDefinition(VillageChiefModel.LAYER_LOCATION, VillageChiefModel::createBodyLayer);
-		EntityRenderers.register(ModEntities.VILLAGE_CHIEF, VillagerChiefRenderer::new);
+		EntityRenderers.register(ModEntities.VILLAGE_CHIEF.value().get(), VillagerChiefRenderer::new);
+	}
+
+	public void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+		event.registerLayerDefinition(VillageChiefModel.LAYER_LOCATION, VillageChiefModel::createBodyLayer);
 	}
 
 	@Override
-	public IRegistries getRegistries() {
-		return (reg) -> {
-			reg.add(Effects.class);
-		};
-	}
-
-	@Override
-	public void registerServerRelaodableResources(ReloadListeners reloadListener) {
+	public void setupRegistries(RegistryCollector collector) {
+		collector.addRegistryHolder(net.minecraft.core.registries.Registries.MOB_EFFECT, Effects.class);
+		collector.addCustom(net.minecraft.core.registries.Registries.SOUND_EVENT, custom -> {
+			custom.register(net.minecraft.resources.ResourceLocation.parse("obville:positive"), ModSounds.POSITIVE.value().get());
+			custom.register(net.minecraft.resources.ResourceLocation.parse("obville:negative"), ModSounds.NEGATIVE.value().get());
+		});
+		collector.addCustom(net.minecraft.core.registries.Registries.ENTITY_TYPE, custom -> {
+			custom.register(net.minecraft.resources.ResourceLocation.parse("obville:village_leader"), ModEntities.VILLAGE_CHIEF.value().get());
+		});
+		collector.addCustom(net.minecraft.core.registries.Registries.MEMORY_MODULE_TYPE, custom -> {
+			custom.register(net.minecraft.resources.ResourceLocation.parse("obville:leader_detected_recently"), ModMemories.LEADER_DETECTED_RECENTLY.value().get());
+		});
 	}
 
 	public static ObVille getInstance() {

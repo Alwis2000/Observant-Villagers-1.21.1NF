@@ -1,12 +1,14 @@
 package com.stereowalker.obville;
 
+import java.util.Optional;
 import com.stereowalker.obville.dat.OVModData;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.chat.TranslatableComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.ItemCost;
 import net.minecraft.world.item.trading.MerchantOffer;
 
 public class Crime {
@@ -27,33 +29,46 @@ public class Crime {
 		this(lawBroken, new ItemStack(reparation, 2));
 	}
 	
-	public static Crime read(CompoundTag tag) {
+	public static Crime read(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries) {
 		return new Crime(Laws.lawsToUphold.get(tag.getString("lawBroken")), 
-				ItemStack.of(tag.getCompound("reparation1")), 
-				ItemStack.of(tag.getCompound("reparation2")));
+				tag.contains("reparation1") ? ItemStack.parse(registries, tag.getCompound("reparation1")).orElse(ItemStack.EMPTY) : ItemStack.EMPTY, 
+				tag.contains("reparation2") ? ItemStack.parse(registries, tag.getCompound("reparation2")).orElse(ItemStack.EMPTY) : ItemStack.EMPTY);
 	}
 	
-	public CompoundTag write() {
+	public CompoundTag write(net.minecraft.core.HolderLookup.Provider registries) {
 		CompoundTag tag = new CompoundTag();
 		if (this.lawBroken != null) tag.putString("lawBroken", lawBroken.crimeIdentifier);
-		tag.put("reparation1", reparation1.save(new CompoundTag()));
-		tag.put("reparation2", reparation2.save(new CompoundTag()));
+		if (!reparation1.isEmpty()) {
+			tag.put("reparation1", reparation1.save(registries, new CompoundTag()));
+		}
+		if (!reparation2.isEmpty()) {
+			tag.put("reparation2", reparation2.save(registries, new CompoundTag()));
+		}
 		return tag;
 	}
 
 	public static ItemStack forgive(int amount, String forWhat, int whichVillage) {
 		ItemStack stack = new ItemStack(Items.PAPER);
-		stack.setHoverName(new TranslatableComponent("crime."+forWhat));
+		stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, Component.translatable("crime."+forWhat));
 		CompoundTag give = new CompoundTag();
 		give.putInt("amount", amount);
 		give.putString("forWhat", forWhat);
 		give.putInt("whichVillage", whichVillage);
-		stack.getOrCreateTag().put("obville:to_forgive", give);
+		CompoundTag customTag = new CompoundTag();
+		customTag.put("obville:to_forgive", give);
+		stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA, net.minecraft.world.item.component.CustomData.of(customTag));
 		return stack;
 	}
 	
 	public MerchantOffer frogive(OVModData data, int village) {
-		return new MerchantOffer(reparation1.copy(), reparation2.copy(), 
-				forgive(-lawBroken.getRepHit(), lawBroken.crimeIdentifier, village), data.crimesCommitedOfType(village, lawBroken), 0, 1);
+		Optional<ItemCost> costB = reparation2.isEmpty() ? Optional.empty() : Optional.of(new ItemCost(reparation2.getItem(), reparation2.getCount()));
+		return new MerchantOffer(
+				new ItemCost(reparation1.getItem(), reparation1.getCount()),
+				costB,
+				forgive(-lawBroken.getRepHit(), lawBroken.crimeIdentifier, village),
+				data.crimesCommitedOfType(village, lawBroken),
+				0, // xp
+				1.0F // priceMultiplier
+		);
 	}
 }

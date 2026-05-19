@@ -20,14 +20,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.level.Level;
-import tallestegg.guardvillagers.entities.Guard;
+import tallestegg.guardvillagers.common.entities.Guard;
 
 @Mixin(Guard.class)
-public abstract class GuardMixin extends PathfinderMob implements IVillager<Guard>, IPlayerFollower, IInvestigator {
+public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, IInvestigator {
 	
 	Map<UUID, Integer> crimesWitnessed = new HashMap<>();
 	public BlockPos investigatePos = BlockPos.ZERO;
@@ -63,15 +60,12 @@ public abstract class GuardMixin extends PathfinderMob implements IVillager<Guar
 	public Map<UUID, Integer> crimesWitnessed() {
 		return crimesWitnessed;
 	}
-	
-	protected GuardMixin(EntityType<? extends PathfinderMob> p_21683_, Level p_21684_) {
-		super(p_21683_, p_21684_);
-	}
 
 	@Inject(method = "registerGoals", at = @At("HEAD"))
 	public void h(CallbackInfo ci) {
-		this.goalSelector.addGoal(3, new FollowCriminalGoal(this, 1D));
-		this.goalSelector.addGoal(0, new InvestigateCrimeGoal(this, .5D));
+		Guard guard = (Guard) (Object) this;
+		guard.goalSelector.addGoal(3, new FollowCriminalGoal(guard, 1D));
+		guard.goalSelector.addGoal(0, new InvestigateCrimeGoal(guard, .5D));
 	}
 	
 	@Inject(method = "tick", at = @At("HEAD"))

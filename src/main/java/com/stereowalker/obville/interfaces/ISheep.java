@@ -16,7 +16,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
-import net.minecraft.world.entity.ai.sensing.GolemSensor;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
@@ -26,21 +25,14 @@ public interface ISheep {
 	public Villager villager();
 
 	private boolean leaderSpawnConditionsMet(long pGameTime) {
-		/*
-		Optional<Long> optional = villager().getBrain().getMemory(MemoryModuleType.LAST_SLEPT);
-		if (optional.isPresent()) {
-			return pGameTime - optional.get() < 24000L;
-		} else {
-			return false;
-		}*/
 		return true;
 	}
 
 	public default boolean wantsToSpawnLeader(long pGameTime) {
-		if (!leaderSpawnConditionsMet(villager().level.getGameTime())) {
+		if (!leaderSpawnConditionsMet(villager().level().getGameTime())) {
 			return false;
 		} else {
-			return !villager().getBrain().hasMemoryValue(ModMemories.LEADER_DETECTED_RECENTLY);
+			return !villager().getBrain().hasMemoryValue(ModMemories.LEADER_DETECTED_RECENTLY.value().get());
 		}
 	}
 
@@ -55,7 +47,6 @@ public interface ISheep {
 				VillageLeader irongolem = trySpawnLeader(pServerLevel);
 				if (irongolem != null) {
 					return true;
-					//list.forEach(GolemSensor::golemDetected);
 				}
 			}
 		}
@@ -71,7 +62,7 @@ public interface ISheep {
 			double d1 = (double)(pServerLevel.random.nextInt(16) - 8);
 			BlockPos blockpos1 = this.findSpawnPositionForLeaderInColumn(blockpos, d0, d1);
 			if (blockpos1 != null) {
-				VillageLeader irongolem = ModEntities.VILLAGE_CHIEF.create(pServerLevel, (CompoundTag)null, (Component)null, (Player)null, blockpos1, MobSpawnType.MOB_SUMMONED, false, false);
+				VillageLeader irongolem = ModEntities.VILLAGE_CHIEF.value().get().create(pServerLevel, (java.util.function.Consumer<VillageLeader>)null, blockpos1, MobSpawnType.MOB_SUMMONED, false, false);
 				if (irongolem != null) {
 					if (irongolem.checkSpawnRules(pServerLevel, MobSpawnType.MOB_SUMMONED) && irongolem.checkSpawnObstruction(pServerLevel)) {
 						pServerLevel.addFreshEntityWithPassengers(irongolem);
@@ -89,15 +80,15 @@ public interface ISheep {
 	@Nullable
 	private BlockPos findSpawnPositionForLeaderInColumn(BlockPos pVillagerPos, double pOffsetX, double pOffsetZ) {
 		int i = 6;
-		BlockPos blockpos = pVillagerPos.offset(pOffsetX, 6.0D, pOffsetZ);
-		BlockState blockstate = villager().level.getBlockState(blockpos);
+		BlockPos blockpos = pVillagerPos.offset((int) pOffsetX, 6, (int) pOffsetZ);
+		BlockState blockstate = villager().level().getBlockState(blockpos);
 
 		for(int j = 6; j >= -6; --j) {
 			BlockPos blockpos1 = blockpos;
 			BlockState blockstate1 = blockstate;
 			blockpos = blockpos.below();
-			blockstate = villager().level.getBlockState(blockpos);
-			if ((blockstate1.isAir() || blockstate1.getMaterial().isLiquid()) && blockstate.getMaterial().isSolidBlocking()) {
+			blockstate = villager().level().getBlockState(blockpos);
+			if ((blockstate1.isAir() || !blockstate1.getFluidState().isEmpty()) && blockstate.isSolid()) {
 				return blockpos1;
 			}
 		}

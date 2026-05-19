@@ -59,7 +59,7 @@ public class InvestigateCrimeGoal extends Goal {
 	public void start() {
 		if (this.mob instanceof IInvestigator investigator) {
 			this.pos = investigator.investigatePos();
-			if (this.mob.level.getBlockState(pos).isAir()) {
+			if (this.mob.level().getBlockState(pos).isAir()) {
 				this.pos = pos.below();
 			}
 		}

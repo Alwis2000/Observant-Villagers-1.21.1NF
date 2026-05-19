@@ -6,12 +6,12 @@ import com.google.common.collect.Lists;
 import com.stereowalker.unionlib.config.ConfigObject;
 import com.stereowalker.unionlib.config.UnionConfig;
 
-import net.minecraftforge.fml.config.ModConfig.Type;
+import com.stereowalker.unionlib.config.ConfigSide;
 
 @UnionConfig(folder = "Obville Configs", name = "villager_lines", translatableName = "config.obville.villager_lines.file", autoReload = true, appendWithType = false)
 public class ExtraLinesConfig implements ConfigObject {	
 
-	@UnionConfig.Entry(name = "Village Leader Redemption Lines", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Village Leader Redemption Lines", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What the leader will say randomly after a redemption trade is complete"})
 	public List<String> leader_lines = Lists.newArrayList(
 			"Just try to stay out of trouble next time, you can pay back for things you did but that wont stop people from holding grudges against you or worse.",
@@ -39,7 +39,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Thanks for this, but you’ve still got a lot to prove."
 			);
 
-	@UnionConfig.Entry(name = "Villager Distruested Lines", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Villager Distruested Lines", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if they decide they don't want to trade with distrusted players"})
 	public List<String> distrusted_lines = Lists.newArrayList(
 			"You think you can do what you did then get trades from me? Find someone else to trade with.",
@@ -77,7 +77,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"I don’t deal with people like you. Move along."
 			);
 
-	@UnionConfig.Entry(name = "Common Bribe Rejected Lines", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Common Bribe Rejected Lines", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if they decide they won't take your bribe"})
 	public List<String> common_bribe_fail = Lists.newArrayList(
 			"What? No, I don't want your money.",
@@ -113,7 +113,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Your bribe means nothing to me."
 			);
 
-	@UnionConfig.Entry(name = "Semi-Rare Bribe Accepted Lines", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Semi-Rare Bribe Accepted Lines", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if they decide they take your bribe"})
 	public List<String> rare_bribe_success = Lists.newArrayList(
 			"Do you really think you can bribe me? Your damn right, I saw nothing.",
@@ -138,7 +138,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Deal. I saw nothing."
 			);
 
-	@UnionConfig.Entry(name = "Caught Commiting Crime", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Caught Commiting Crime", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if they're the only one that caught you commiting a crime"})
 	public List<String> caught = Lists.newArrayList(
 			"HEY, what are you doing?",
@@ -150,7 +150,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"HEY STOP, you can't do that. What's wrong with you?"
 			);
 
-	@UnionConfig.Entry(name = "Caught Commiting Crime By Guard Villager", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Caught Commiting Crime By Guard Villager", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a guard villager will say randomly if they're the only one that caught you commiting a crime"})
 	public List<String> guardCaught = Lists.newArrayList(
 			"What are you doing? Hm? Im watching you.",
@@ -168,7 +168,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"I'm watching you, be on your best behavior or else."
 			);
 
-	@UnionConfig.Entry(name = "Recovering From Distrust", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Recovering From Distrust", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly when you were distrusted and are now regaining their trust"})
 	public List<String> recoverFromDistrusted = Lists.newArrayList(
 			"Uh, yeah I am still not sure about trading with you. Maybe if I hear that you keep improving I'll give you a chance but until then, stay away from me please.",
@@ -204,7 +204,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Trading? Not right now, I can't just trade with someone just because your doing better. We need to see more improvement or something, it is still too soon to just forget and go back to trading. For all I know, you will go right back to causing trouble."
 			);
 
-	@UnionConfig.Entry(name = "Distrusted Again", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Distrusted Again", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly when you become distrusted again"})
 	public List<String> distrustedAgain = Lists.newArrayList(
 			"Why would I want to trade with you? You don't know when to stop being an issue, I don't know what's with you or if you were a mistake during birth but keep away from me and my home.",
@@ -239,7 +239,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"You’ve made your bed. Now lie in it. I won't trade with idiots who keep causing issues."
 			);
 
-	@UnionConfig.Entry(name = "Blacklisted", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Blacklisted", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if they've blacklisted you"})
 	public List<String> blacklisted = Lists.newArrayList(
 			"I saw what you did, I am not trading with you.",
@@ -259,7 +259,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Oh nah, I saw what you did earlier and I want nothing to do with someone like you. It dont matter if a crime is big and cool or small and unimportant I want nothing to do with criminals."
 			);
 	
-	@UnionConfig.Entry(name = "Invisible Crime", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Invisible Crime", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a villager will say randomly if you commit a crime while you're invisible"})
 	public List<String> invisible = Lists.newArrayList(
 			"Huh? Is someone there?",
@@ -284,7 +284,7 @@ public class ExtraLinesConfig implements ConfigObject {
 			"How.. what?"
 			);
 	
-	@UnionConfig.Entry(name = "Bounty Completed", type = Type.COMMON)
+	@UnionConfig.Entry(name = "Bounty Completed", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a village leader will say randomly if you sibmit a bounty"})
 	public List<String> bounty = Lists.newArrayList(
 			"Finally someone got them! Here, take your reward for finally taking down that weirdo. Thank you.",

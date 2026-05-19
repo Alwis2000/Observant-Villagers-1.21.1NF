@@ -23,18 +23,21 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.block.entity.Hopper;
 import net.minecraft.world.level.block.entity.HopperBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 
 @Mixin(HopperBlockEntity.class)
 public abstract class HopperBlockEntityMixin {
-	@Shadow private static Container getSourceContainer(Level p_155597_, Hopper p_155598_) {return null;}
+	@Shadow private static Container getSourceContainer(Level pLevel, Hopper pHopper, BlockPos pPos, BlockState pState) {return null;}
 
 	@Inject(method = "suckInItems", at = @At("HEAD"), cancellable = true)
 	private static void tryTakeInItemFromSlotInject(Level p_155553_, Hopper p_155554_, CallbackInfoReturnable<Boolean> cir) {
-		Boolean ret = net.minecraftforge.items.VanillaInventoryCodeHooks.extractHook(p_155553_, p_155554_);
+		Boolean ret = net.neoforged.neoforge.items.VanillaInventoryCodeHooks.extractHook(p_155553_, p_155554_);
 		if (ret != null) {
 			if (ret) {
-				Container pContainer = getSourceContainer(p_155553_, p_155554_);
+				BlockPos hopperPos = BlockPos.containing(p_155554_.getLevelX(), p_155554_.getLevelY(), p_155554_.getLevelZ());
+				BlockState hopperState = p_155553_.getBlockState(hopperPos);
+				Container pContainer = getSourceContainer(p_155553_, p_155554_, hopperPos, hopperState);
 				ServerLevel level = null;
 				ILootableBlock loot = null;
 				BlockPos pos = null;

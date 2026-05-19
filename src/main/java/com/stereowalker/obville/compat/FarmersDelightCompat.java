@@ -4,6 +4,8 @@ import com.stereowalker.obville.Crime;
 import com.stereowalker.obville.Law;
 import com.stereowalker.obville.Laws;
 
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -11,37 +13,44 @@ import net.minecraft.world.level.block.Block;
 public class FarmersDelightCompat {
 	
 	public static boolean plantFromMod(Block block){
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.TOMATO_CROP.get()) return true;
-		return false;
+		String key = BuiltInRegistries.BLOCK.getKey(block).toString();
+		return key.equals("farmersdelight:tomato_crop");
 	}
 	
 	public static Crime equivalentCrime(Block block){
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.TOMATO_CROP.get()) return new Crime(Laws.BREAKING_TOMATO, 
-				new ItemStack(vectorwing.farmersdelight.common.registry.ModItems.TOMATO.get(), 2), 
-				new ItemStack(vectorwing.farmersdelight.common.registry.ModItems.TOMATO_SEEDS.get(), 1));
+		String key = BuiltInRegistries.BLOCK.getKey(block).toString();
+		if (key.equals("farmersdelight:tomato_crop")) {
+			Item tomato = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("farmersdelight", "tomato"));
+			Item seeds = BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("farmersdelight", "tomato_seeds"));
+			return new Crime(Laws.BREAKING_TOMATO, new ItemStack(tomato, 2), new ItemStack(seeds, 1));
+		}
 		return null;
 	}
 	
-	
 	public static boolean fromMod(Block block){
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL.get()) return true;
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL_FARMLAND.get()) return true;
-		else if (block == vectorwing.farmersdelight.common.registry.ModBlocks.ORGANIC_COMPOST.get()) return true;
-		return false;
+		String key = BuiltInRegistries.BLOCK.getKey(block).toString();
+		return key.equals("farmersdelight:rich_soil") || 
+		       key.equals("farmersdelight:rich_soil_farmland") || 
+		       key.equals("farmersdelight:organic_compost");
 	}
 	
-	
 	public static Item equivalentItem(Block block){
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL.get()) return vectorwing.farmersdelight.common.registry.ModItems.RICH_SOIL.get();
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL_FARMLAND.get()) return vectorwing.farmersdelight.common.registry.ModItems.RICH_SOIL.get();
-		else if (block == vectorwing.farmersdelight.common.registry.ModBlocks.ORGANIC_COMPOST.get()) return vectorwing.farmersdelight.common.registry.ModItems.ORGANIC_COMPOST.get();
+		String key = BuiltInRegistries.BLOCK.getKey(block).toString();
+		if (key.equals("farmersdelight:rich_soil") || key.equals("farmersdelight:rich_soil_farmland")) {
+			return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("farmersdelight", "rich_soil"));
+		} else if (key.equals("farmersdelight:organic_compost")) {
+			return BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("farmersdelight", "organic_compost"));
+		}
 		return null;
 	}
 	
 	public static Law equivalentLaw(Block block){
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL.get()) return Laws.BREAKING_RICH_SOIL;
-		if (block == vectorwing.farmersdelight.common.registry.ModBlocks.RICH_SOIL_FARMLAND.get()) return Laws.BREAKING_RICH_SOIL;
-		else if (block == vectorwing.farmersdelight.common.registry.ModBlocks.ORGANIC_COMPOST.get()) return Laws.BREAKING_ORGANIC_COMPOST;
+		String key = BuiltInRegistries.BLOCK.getKey(block).toString();
+		if (key.equals("farmersdelight:rich_soil") || key.equals("farmersdelight:rich_soil_farmland")) {
+			return Laws.BREAKING_RICH_SOIL;
+		} else if (key.equals("farmersdelight:organic_compost")) {
+			return Laws.BREAKING_ORGANIC_COMPOST;
+		}
 		return null;
 	}
 }

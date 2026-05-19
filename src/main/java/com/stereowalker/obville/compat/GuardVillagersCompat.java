@@ -14,25 +14,25 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
+import tallestegg.guardvillagers.common.entities.Guard;
 
 public class GuardVillagersCompat {
 	
 	public static boolean isGuard(Entity entity){
-		return entity instanceof tallestegg.guardvillagers.entities.Guard;
+		return entity instanceof Guard;
 	}
 	
 	public static void tryToAnger(Player player, boolean angerOnlyIfCanSee, List<LivingEntity> angeredEntities, List<Villager> villagers) {
-		Predicate<tallestegg.guardvillagers.entities.Guard> shouldAngerGuard = guard -> villagers.size() > 0 || !angerOnlyIfCanSee || ObVille.isLookingAtPlayer(guard, player);
-		List<tallestegg.guardvillagers.entities.Guard> guards = player.level.getEntitiesOfClass(tallestegg.guardvillagers.entities.Guard.class, player.getBoundingBox().inflate(16.0));
+		Predicate<Guard> shouldAngerGuard = guard -> villagers.size() > 0 || !angerOnlyIfCanSee || ObVille.isLookingAtPlayer(guard, player);
+		List<Guard> guards = player.level().getEntitiesOfClass(Guard.class, player.getBoundingBox().inflate(16.0));
 		guards.stream().filter(shouldAngerGuard).forEach(guard -> {
 			angeredEntities.add(guard);
 		});
-		
 	}
 	
 	public static void wit(Player player, List<LivingEntity> angeredEntities, Crime crimeCommited) {
-		if (angeredEntities.get(0) instanceof tallestegg.guardvillagers.entities.Guard guard && crimeCommited != null && crimeCommited.lawBroken.isPardonable()) {
-			IVillager<tallestegg.guardvillagers.entities.Guard> vg = (IVillager<tallestegg.guardvillagers.entities.Guard>)guard;
+		if (angeredEntities.get(0) instanceof Guard guard && crimeCommited != null && crimeCommited.lawBroken.isPardonable()) {
+			IVillager<Guard> vg = (IVillager<Guard>)guard;
 			if (!vg.crimesWitnessed().containsKey(player.getUUID()))
 				vg.crimesWitnessed().put(player.getUUID(), 0);
 			vg.crimesWitnessed().put(player.getUUID(), vg.crimesWitnessed().get(player.getUUID())+1);
@@ -48,7 +48,7 @@ public class GuardVillagersCompat {
 	}
 	
 	public static void target(LivingEntity liv, Player player) {
-		if (liv instanceof tallestegg.guardvillagers.entities.Guard guard) {
+		if (liv instanceof Guard guard) {
 			guard.setTarget(player);
 		}
 	}

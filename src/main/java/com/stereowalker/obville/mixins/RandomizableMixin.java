@@ -11,7 +11,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.stereowalker.obville.interfaces.ILootableBlock;
 
@@ -19,21 +18,24 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.RandomizableContainer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootTable;
 
 @Mixin(RandomizableContainerBlockEntity.class)
-public abstract class RandomizableMixin extends BaseContainerBlockEntity implements ILootableBlock {
+public abstract class RandomizableMixin extends BaseContainerBlockEntity implements ILootableBlock, RandomizableContainer {
 
 	protected RandomizableMixin(BlockEntityType<?> p_155076_, BlockPos p_155077_, BlockState p_155078_) {
 		super(p_155076_, p_155077_, p_155078_);
 	}
 
-	@Shadow protected ResourceLocation lootTable;
+	@Shadow @Nullable protected ResourceKey<LootTable> lootTable;
 	protected ResourceLocation lootTable1;
 	protected List<UUID> playersOpened;
 
@@ -52,16 +54,15 @@ public abstract class RandomizableMixin extends BaseContainerBlockEntity impleme
 		if (playersOpened == null)
 			playersOpened = new ArrayList<>();
 		playersOpened.add(player.getUUID());
-		
 	}
 
-	@Inject(method = "tryLoadLootTable", at = @At("HEAD"))
-	protected void tryLoadLootTableInject(CompoundTag pTag, CallbackInfoReturnable<Boolean> cir) {
+	@Override
+	public boolean tryLoadLootTable(CompoundTag pTag) {
 		if (pTag.contains("ContainerLootTable", 8)) {				
-			this.lootTable1 = new ResourceLocation(pTag.getString("ContainerLootTable"));
+			this.lootTable1 = ResourceLocation.parse(pTag.getString("ContainerLootTable"));
 		}
 		else if (pTag.contains("LootTable", 8)) {
-			this.lootTable1 = new ResourceLocation(pTag.getString("LootTable"));
+			this.lootTable1 = ResourceLocation.parse(pTag.getString("LootTable"));
 		}
 		
 		if (pTag.contains("PlayersOpened")) {		
@@ -71,10 +72,11 @@ public abstract class RandomizableMixin extends BaseContainerBlockEntity impleme
 				this.playersOpened.add(NbtUtils.loadUUID(list.get(i)));
 			}
 		}
+		return RandomizableContainer.super.tryLoadLootTable(pTag);
 	}
 
-	@Inject(method = "trySaveLootTable", at = @At("HEAD"))
-	protected void trySaveLootTableInject(CompoundTag pTag, CallbackInfoReturnable<Boolean> cir) {
+	@Override
+	public boolean trySaveLootTable(CompoundTag pTag) {
 		if (lootTable1 != null) {
 			pTag.putString("ContainerLootTable", this.lootTable1.toString());
 		}
@@ -84,20 +86,24 @@ public abstract class RandomizableMixin extends BaseContainerBlockEntity impleme
 			playersOpened.forEach(player -> list.add(NbtUtils.createUUID(player)));
 			pTag.put("PlayersOpened", list);
 		}
+		return RandomizableContainer.super.trySaveLootTable(pTag);
 	}
 
-	@Inject(method = "setLootTable(Lnet/minecraft/resources/ResourceLocation;J)V", at = @At("HEAD"))
-	public void setLootTableInject(ResourceLocation pLootTable, long pLootTableSeed, CallbackInfo ci) {
-		this.lootTable1 = pLootTable;
+	@Inject(method = "setLootTable(Lnet/minecraft/resources/ResourceKey;)V", at = @At("HEAD"))
+	public void setLootTableInject(ResourceKey<LootTable> pLootTable, CallbackInfo ci) {
+		if (pLootTable != null) {
+			this.lootTable1 = pLootTable.location();
+		}
 	}
-	
-	@Inject(method = "unpackLootTable", at = @At("HEAD"))
-	public void unpackLootTableInject(@Nullable Player pPlayer, CallbackInfo ci) {
+
+	@Override
+	public void unpackLootTable(@Nullable Player pPlayer) {
 		if (this.lootTable != null && this.level.getServer() != null) {
 			System.out.println("Generating "+lootTable);
 			System.out.println("Saving "+lootTable);
-			this.lootTable1 = lootTable;
+			this.lootTable1 = lootTable.location();
 		}
+		RandomizableContainer.super.unpackLootTable(pPlayer);
 	}
 
 }

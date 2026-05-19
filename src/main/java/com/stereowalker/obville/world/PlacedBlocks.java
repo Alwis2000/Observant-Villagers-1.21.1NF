@@ -53,14 +53,14 @@ public class PlacedBlocks extends SavedData
     	for (Integer village : villages.keySet()) {
     		if (village == 0) continue;
     		last++;
-    		AABB bounds = new AABB(villages.get(village).bounds.getLeft(), villages.get(village).bounds.getRight());
+    		AABB bounds = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(villages.get(village).bounds.getLeft()), net.minecraft.world.phys.Vec3.atLowerCornerOf(villages.get(village).bounds.getRight()));
     		if (bounds.contains(pos.getX(), pos.getY(), pos.getZ())) {
     			return village;
     		} else if (villages.get(village).bounds.getLeft().distSqr(pos) < 10 || villages.get(village).bounds.getRight().distSqr(pos) < 10) {
     			AABB newBounds = bounds.minmax(new AABB(pos));
     			VillageData dat = new VillageData();
-    			dat.bounds = Pair.of(new BlockPos(newBounds.minX, newBounds.minY, newBounds.minZ), 
-    	    			new BlockPos(newBounds.maxX, newBounds.maxY, newBounds.maxZ));
+    			dat.bounds = Pair.of(BlockPos.containing(newBounds.minX, newBounds.minY, newBounds.minZ), 
+    	    			BlockPos.containing(newBounds.maxX, newBounds.maxY, newBounds.maxZ));
     			villages.put(last, dat);
     			return village;
     		}
@@ -92,7 +92,7 @@ public class PlacedBlocks extends SavedData
     }
 
     @Override
-    public CompoundTag save(CompoundTag tag)
+    public CompoundTag save(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries)
     {
     	CompoundTag blockChangesTag = new CompoundTag();
         for (BlockPos entry : blockChanges.keySet())
@@ -105,14 +105,14 @@ public class PlacedBlocks extends SavedData
     	CompoundTag tag2 = new CompoundTag();
         for (Integer entry : villages.keySet())
         {
-            tag2.put(entry.toString(), villages.get(entry).write());
+            tag2.put(entry.toString(), villages.get(entry).write(registries));
         }
         tag.put("Villages", tag2);
         
         return tag;
     }
 
-    public static PlacedBlocks read(CompoundTag tag)
+    public static PlacedBlocks read(CompoundTag tag, net.minecraft.core.HolderLookup.Provider registries)
     {
     	PlacedBlocks map = new PlacedBlocks();
         map.blockChanges.clear();
@@ -129,7 +129,7 @@ public class PlacedBlocks extends SavedData
         CompoundTag tag2 = tag.getCompound("Villages");
         for (String entry : tag2.getAllKeys())
         {
-            map.villages.put(Integer.parseInt(entry), VillageData.read(tag2.getCompound(entry)));
+            map.villages.put(Integer.parseInt(entry), VillageData.read(tag2.getCompound(entry), registries));
         }
         return map;
 
@@ -138,12 +138,12 @@ public class PlacedBlocks extends SavedData
     public static PlacedBlocks getInstance(ServerLevel level)
     {
     	DimensionDataStorage manager = Objects.requireNonNull(level).getDataStorage();
-        return manager.computeIfAbsent(PlacedBlocks::read, PlacedBlocks::new, KEY);
+        return manager.computeIfAbsent(new SavedData.Factory<>(PlacedBlocks::new, PlacedBlocks::read, null), KEY);
     }
 
     public static PlacedBlocks getInstance(MinecraftServer server, ResourceKey<Level> dimension)
     {
     	DimensionDataStorage manager = Objects.requireNonNull(server.getLevel(dimension)).getDataStorage();
-        return manager.computeIfAbsent(PlacedBlocks::read, PlacedBlocks::new, KEY);
+        return manager.computeIfAbsent(new SavedData.Factory<>(PlacedBlocks::new, PlacedBlocks::read, null), KEY);
     }
 }

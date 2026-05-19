@@ -1,7 +1,4 @@
 package com.stereowalker.obville.client.renderer.entity;
-// Made with Blockbench 4.8.3
-// Exported for Minecraft version 1.17 or later with Mojang mappings
-// Paste this class into your mod and generate all required imports
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
@@ -22,8 +19,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.npc.AbstractVillager;
 
 public class VillageChiefModel extends EntityModel<VillageLeader> implements HeadedModel {
-	// This layer location should be baked with EntityRendererProvider.Context in the entity renderer and passed into this model's constructor
-	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(new ResourceLocation("obville", "villager"), "main");
+	public static final ModelLayerLocation LAYER_LOCATION = new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath("obville", "villager"), "main");
 	private final ModelPart head;
 	private final ModelPart body;
 	private final ModelPart bodywear;
@@ -76,33 +72,33 @@ public class VillageChiefModel extends EntityModel<VillageLeader> implements Hea
 	@Override
 	public void setupAnim(VillageLeader entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		boolean flag = false;
-	      if (entity instanceof AbstractVillager) {
-	         flag = ((AbstractVillager)entity).getUnhappyCounter() > 0;
-	      }
+		if (entity instanceof AbstractVillager) {
+			flag = ((AbstractVillager)entity).getUnhappyCounter() > 0;
+		}
 
-	      this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
-	      this.head.xRot = headPitch * ((float)Math.PI / 180F);
-	      if (flag) {
-	         this.head.zRot = 0.3F * Mth.sin(0.45F * ageInTicks);
-	         this.head.xRot = 0.4F;
-	      } else {
-	         this.head.zRot = 0.0F;
-	      }
+		this.head.yRot = netHeadYaw * ((float)Math.PI / 180F);
+		this.head.xRot = headPitch * ((float)Math.PI / 180F);
+		if (flag) {
+			this.head.zRot = 0.3F * Mth.sin(0.45F * ageInTicks);
+			this.head.xRot = 0.4F;
+		} else {
+			this.head.zRot = 0.0F;
+		}
 
-	      this.right_leg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount * 0.5F;
-	      this.left_leg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount * 0.5F;
-	      this.right_leg.yRot = 0.0F;
-	      this.left_leg.yRot = 0.0F;
+		this.right_leg.xRot = Mth.cos(limbSwing * 0.6662F) * 1.4F * limbSwingAmount * 0.5F;
+		this.left_leg.xRot = Mth.cos(limbSwing * 0.6662F + (float)Math.PI) * 1.4F * limbSwingAmount * 0.5F;
+		this.right_leg.yRot = 0.0F;
+		this.left_leg.yRot = 0.0F;
 	}
 
 	@Override
-	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		head.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		body.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		bodywear.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		arms.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		right_leg.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
-		left_leg.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, int color) {
+		head.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		body.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		bodywear.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		arms.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		right_leg.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
+		left_leg.render(poseStack, vertexConsumer, packedLight, packedOverlay, color);
 	}
 
 	@Override

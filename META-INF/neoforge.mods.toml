@@ -1,0 +1,64 @@
+modLoader="javafml"
+loaderVersion="[4,5)"
+license="All Rights Reserved"
+[[mods]]
+modId="unionlib"
+version="12.2"
+displayName="UnionLib"
+updateJSONURL="https://raw.githubusercontent.com/Stereowalker/My-Home-Page/main/update_files/unionlib.json"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/unionlib"
+logoFile="pack.png"
+credits="I'd like to thank all my supporters on Patreon for giving me a reason to continue modding, and you for downloading and playing with this mod"
+authors="Stereowalker"
+description='''A library mod for all my mods'''
+[[mixins]]
+config="unionlib.mixins.json"
+[[mixins]]
+config="unionlib.insert.mixins.json"
+[[accessTransformers]]
+file="META-INF/accesstransformer.cfg"
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
+[[dependencies.unionlib]] #optional
+    modId="neoforge" #mandatory
+    mandatory=true #mandatory
+    versionRange="[21.0.100-beta,)" #mandatory
+    ordering="NONE"
+    side="BOTH"
+# Here's another dependency
+[[dependencies.unionlib]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.21,1.22)"
+    ordering="NONE"
+    side="BOTH"
+    
+[[mods]]
+modId="unionlib_potionfluid"
+version="1.0.0"
+displayName="UnionLib (Potions & Fluids)"
+updateJSONURL="https://raw.githubusercontent.com/Stereowalker/My-Home-Page/main/update_files/unionlib-potions-fluids.json"
+displayURL="https://www.curseforge.com/minecraft/mc-mods/unionlib-potions-fluids"
+logoFile="pack.png"
+credits="I'd like to thank all my supporters on Patreon for giving me a reason to continue modding, and you for downloading and playing with this mod"
+authors="Stereowalker"
+description='''
+ This is a mod that allows the mod firing it to ask other mods using the event what potion maps to what fluids. This should make it significantly easier for mods with custom fluids for their potions to communicate such to mod authors that need the information.
+The mod adds 2 events, a FluidToPotionEvent that communicates which fluid corresponds to what potion and a PotionToFluidEvent that communicates which potion corresponds to what fluid
+The mod uses the FluidToPotionEvent event when the player collects water from a source water block with a glass bottle, setting the potion allows you to change what potion is resulted from that action, and as long as the potion result in the event is not null, any fluid can be collected from
+'''
+#[[mixins]]
+#config="unionlib_potionfluid.mixins.json"
+# A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
+[[dependencies.unionlib_potionfluid]] #optional
+    modId="neoforge" #mandatory
+    mandatory=true #mandatory
+    versionRange="[21.0.100-beta,)" #mandatory
+    ordering="NONE"
+    side="BOTH"
+# Here's another dependency
+[[dependencies.unionlib_potionfluid]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.21,1.22)"
+    ordering="NONE"
+    side="BOTH"

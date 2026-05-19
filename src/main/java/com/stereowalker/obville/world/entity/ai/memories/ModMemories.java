@@ -1,18 +1,24 @@
 package com.stereowalker.obville.world.entity.ai.memories;
 
 import java.util.Optional;
-
 import com.mojang.serialization.Codec;
-
-import net.minecraft.resources.ResourceLocation;
+import com.stereowalker.obville.ObVille;
+import com.stereowalker.unionlib.core.registries.Housing;
+import com.stereowalker.unionlib.core.registries.RegistryHolder;
+import com.stereowalker.unionlib.core.registries.RegistryObject;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 
+@RegistryHolder(namespace = ObVille.MOD_ID)
 public class ModMemories {
-	public static final MemoryModuleType<Boolean> LEADER_DETECTED_RECENTLY = register("obville:leader_detected_recently", Codec.BOOL);
+	
+	private static MemoryModuleType<Boolean> leaderDetectedRecently;
 
-	private static <U> MemoryModuleType<U> register(String pIdentifier, Codec<U> pCodec) {
-		MemoryModuleType<U> type = new MemoryModuleType<>(Optional.of(pCodec));
-		type.setRegistryName(new ResourceLocation(pIdentifier));
-		return type;
-	}	   
+	@RegistryObject("leader_detected_recently")
+	public static final Housing<MemoryModuleType<Boolean>> LEADER_DETECTED_RECENTLY = Housing.create(() -> {
+		if (leaderDetectedRecently == null) {
+			leaderDetectedRecently = new MemoryModuleType<>(Optional.of(Codec.BOOL));
+		}
+		return leaderDetectedRecently;
+	});
+	
 }

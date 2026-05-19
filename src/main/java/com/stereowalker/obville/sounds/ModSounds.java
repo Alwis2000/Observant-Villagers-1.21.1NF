@@ -1,28 +1,32 @@
 package com.stereowalker.obville.sounds;
 
-import java.util.ArrayList;
-import java.util.List;
-
+import com.stereowalker.obville.ObVille;
+import com.stereowalker.unionlib.core.registries.Housing;
+import com.stereowalker.unionlib.core.registries.RegistryHolder;
+import com.stereowalker.unionlib.core.registries.RegistryObject;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraftforge.registries.IForgeRegistry;
 
+@RegistryHolder(namespace = ObVille.MOD_ID)
 public class ModSounds {
-	public static final List<SoundEvent> SOUNDEVENTS = new ArrayList<SoundEvent>();
 	
-	public static final SoundEvent POSITIVE = register("positive");
-	public static final SoundEvent NEGATIVE = register("negative");
-	
-	public static SoundEvent register(String name) {
-		SoundEvent soundEvent = new SoundEvent(new ResourceLocation("obville:"+name));
-		soundEvent.setRegistryName(new ResourceLocation("obville:"+name));
-		ModSounds.SOUNDEVENTS.add(soundEvent);
-		return soundEvent;
-	}
-	
-	public static void registerAll(IForgeRegistry<SoundEvent> registry) {
-		for(SoundEvent soundEvent : SOUNDEVENTS) {
-			registry.register(soundEvent);
+	private static SoundEvent positive;
+	private static SoundEvent negative;
+
+	@RegistryObject("positive")
+	public static final Housing<SoundEvent> POSITIVE = Housing.create(() -> {
+		if (positive == null) {
+			positive = SoundEvent.createVariableRangeEvent(ResourceLocation.parse("obville:positive"));
 		}
-	}
+		return positive;
+	});
+	
+	@RegistryObject("negative")
+	public static final Housing<SoundEvent> NEGATIVE = Housing.create(() -> {
+		if (negative == null) {
+			negative = SoundEvent.createVariableRangeEvent(ResourceLocation.parse("obville:negative"));
+		}
+		return negative;
+	});
+	
 }

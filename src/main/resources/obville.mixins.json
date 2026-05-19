@@ -1,34 +1,35 @@
 {
-  "required": true,
-  "minVersion": "0.8",
-  "package": "com.stereowalker.obville.mixins",
-  "compatibilityLevel": "JAVA_17",
-  "refmap": "Observant Villagers-refmap.json",
+	"required": true,
+	"minVersion": "0.8",
+	"package": "com.stereowalker.obville.mixins",
+	"compatibilityLevel": "JAVA_21",
+	"refmap": "Observant Villagers-refmap.json",
 	"plugin": "com.stereowalker.obville.mixins.ObvilleMixinPlugin",
-  "mixins": [
-  	"AbstractVillagerMixin",
-	"BarrelBlockMixin",
-	"BedBlockEntityMixin",
-	"BedBlockMixin",
-	"BellBlockEntityMixin",
-	"BlockMixin",
-	"ChestBlockMixin",
-	"CompoundContainerMixin",
-	"CowMixin",
-	"HopperBlockMixin",
-	"HopperBlockEntityMixin",
-  	"PlayerMixin",
-	"RaidMixin",
-	"RandomizableMixin",
-	"VillagerMixin",
-	"DefendVillageTargetGoalGolemMixin",
-	"guard.DefendVillageTargetGoalGuardMixin",
-	"guard.GuardMixin"
-  ],
-  "client": [
-  	"client.AbstractClientPlayerMixin"
-  ],
-  "injectors": {
-    "defaultRequire": 1
-  }
+	"mixins": [
+		"AbstractVillagerMixin",
+		"BarrelBlockMixin",
+		"BedBlockEntityMixin",
+		"BedBlockMixin",
+		"BellBlockEntityAccessor",
+		"BellBlockEntityMixin",
+		"BlockMixin",
+		"ChestBlockMixin",
+		"CompoundContainerMixin",
+		"CowMixin",
+		"HopperBlockMixin",
+		"HopperBlockEntityMixin",
+		"PlayerMixin",
+		"RaidMixin",
+		"RandomizableMixin",
+		"VillagerMixin",
+		"DefendVillageTargetGoalGolemMixin",
+		"guard.DefendVillageTargetGoalGuardMixin",
+		"guard.GuardMixin"
+	],
+	"client": [
+		"client.AbstractClientPlayerMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
 }

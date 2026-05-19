@@ -2,7 +2,6 @@ package com.stereowalker.obville.interfaces;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.UUID;
 
 import com.stereowalker.obville.Crime;
@@ -11,8 +10,8 @@ import com.stereowalker.obville.ObVille;
 import com.stereowalker.obville.dat.VillageData;
 
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.RandomSource;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
@@ -38,7 +37,7 @@ public interface IVillager<T extends PathfinderMob> {
 	}
 	
 	public default Component fromVillager(List<String> lines) {
-		Component line = new TextComponent(lines.get(me().getRandom().nextInt(lines.size())));
+		Component line = Component.literal(lines.get(me().getRandom().nextInt(lines.size())));
 		
 		if (me().getTags().contains("villagernames.named"))
 			return me().getCustomName().copy().append(": ").append(line);
@@ -48,7 +47,7 @@ public interface IVillager<T extends PathfinderMob> {
 	
 	public enum BribeStatus{ Accepted, Rejected, NotInitiated}
 	
-	public default BribeStatus acceptBribe(Player player, ItemStack stack, Random rng) {
+	public default BribeStatus acceptBribe(Player player, ItemStack stack, RandomSource rng) {
 		IModdedEntity modded = (IModdedEntity)player;
 		if (recentlyWitnessedCrime().containsKey(player.getUUID()) && stack.getItem() == Items.EMERALD && !recentlyTakenBribe().containsKey(player.getUUID())) {
 			boolean bribeTaken = rng.nextInt(650) < stack.getCount() * 10;

@@ -9,6 +9,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.stereowalker.obville.ObVille;
 import com.stereowalker.obville.interfaces.IGeneratableBlockEntity;
@@ -17,7 +18,6 @@ import com.stereowalker.obville.world.PlacedBlocks;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
@@ -38,8 +38,8 @@ public abstract class BedBlockMixin extends HorizontalDirectionalBlock implement
 		super(p_54120_);
 	}
 
-	@Redirect(method = "use", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BedBlock;kickVillagerOutOfBed(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Z"))
-	public boolean kickVillagerOutOfBedRedirect(BedBlock bed, Level pLevel, BlockPos pPos, BlockState pState, Level pLevel2, BlockPos pPos2, Player pPlayer, InteractionHand pHand, BlockHitResult pHit) {
+	@Redirect(method = "useWithoutItem", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/block/BedBlock;kickVillagerOutOfBed(Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;)Z"))
+	public boolean kickVillagerOutOfBedRedirect(BedBlock bed, Level pLevel, BlockPos pPos, BlockState pState, Level pLevel2, BlockPos pPos2, Player pPlayer, BlockHitResult pHit) {
 		List<Villager> list = pLevel.getEntitiesOfClass(Villager.class, new AABB(pPos), LivingEntity::isSleeping);
 		if (list.isEmpty()) {
 			return false;
@@ -68,7 +68,7 @@ public abstract class BedBlockMixin extends HorizontalDirectionalBlock implement
 	}
 
 	@Inject(method = "playerWillDestroy", at = @At(value = "TAIL"))
-	public void set(Level pLevel, BlockPos pPos, BlockState pState, Player pPlayer, CallbackInfo ci) {
+	public void set(Level pLevel, BlockPos pPos, BlockState pState, Player pPlayer, CallbackInfoReturnable<BlockState> cir) {
 		if (pLevel instanceof ServerLevel server) {
 			PlacedBlocks pb = PlacedBlocks.getInstance(server);
 			BlockPos blockpos = pPos.relative(pState.getValue(FACING));

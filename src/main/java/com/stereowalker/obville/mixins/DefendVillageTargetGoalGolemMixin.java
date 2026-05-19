@@ -44,7 +44,7 @@ public abstract class DefendVillageTargetGoalGolemMixin {
 	@Inject(method = "canUse", at = @At("HEAD"))
 	protected void canUseInject(CallbackInfoReturnable<Boolean> cir) {
 		AABB aabb = this.golem.getBoundingBox().inflate(20.0D, 16.0D, 20.0D);
-		List<Player> list1 = this.golem.level.getNearbyPlayers(this.attackTargeting, this.golem, aabb);
+		List<Player> list1 = this.golem.level().getNearbyPlayers(this.attackTargeting, this.golem, aabb);
 		
 		for (Player player : list1) {
 			IModdedEntity ent = (IModdedEntity)player;

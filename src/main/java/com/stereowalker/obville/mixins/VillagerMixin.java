@@ -28,26 +28,22 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.TextComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Tuple;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.npc.AbstractVillager;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.npc.VillagerDataHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.trading.MerchantOffer;
-import net.minecraft.world.level.Level;
-import net.minecraftforge.network.NetworkDirection;
 
 @Mixin(Villager.class)
-public abstract class VillagerMixin extends AbstractVillager implements VillagerDataHolder, IVillager<Villager>, ISheep {
+public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Villager>, ISheep {
 	@Shadow private Player lastTradedPlayer;
 	@Shadow private void setUnhappy() {}
 	@Shadow private boolean shouldIncreaseLevel() {return false;}
+	@Shadow public abstract net.minecraft.world.entity.npc.VillagerData getVillagerData();
 
 	private Map<UUID, Integer> blacklisted = new HashMap<>();
 	private List<UUID> untrustworthy = new ArrayList<>();
@@ -61,10 +57,6 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 	private boolean decidedOnTradingWithDistrusted = false;
 	private boolean hasRewardedCustomer = false;
 	private int affectedByWeary = 0;
-
-	public VillagerMixin(EntityType<? extends AbstractVillager> p_35267_, Level p_35268_) {
-		super(p_35267_, p_35268_);
-	}
 
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void ticker(CallbackInfo ci) {
@@ -104,43 +96,42 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 			CompoundTag tag = list1.getCompound(i);
 			this.trustTimer.put(NbtUtils.loadUUID(tag.get("UUID")), tag.getInt("Timer"));
 		}
-
+		
 		this.playersSaidLineTo = new ArrayList<>();
 		pCompound.getList("SaidLineTo", 11).forEach(nbt -> this.playersSaidLineTo.add(NbtUtils.loadUUID(nbt)));
-
+		
 		this.playersSaidRecoverLineTo = new ArrayList<>();
 		pCompound.getList("RecoverSaidLineTo", 11).forEach(nbt -> this.playersSaidRecoverLineTo.add(NbtUtils.loadUUID(nbt)));
-
+		
 		this.playersSaidUntrustworthyLineTo = new ArrayList<>();
 		pCompound.getList("UntrustworthySaidLineTo", 11).forEach(nbt -> this.playersSaidUntrustworthyLineTo.add(NbtUtils.loadUUID(nbt)));
-
-		ListTag list3 = pCompound.getList("RecentlyWitnessedCrime", 10);
+		
+		ListTag list3 = pCompound.getList("WitnessedCrimes", 10);
 		this.recentlyWitnessedCrime = new HashMap<>();
 		for (int i = 0; i < list3.size(); i++) {
 			CompoundTag tag = list3.getCompound(i);
 			this.recentlyWitnessedCrime.put(NbtUtils.loadUUID(tag.get("UUID")), new Tuple<Law, Integer>(Laws.lawsToUphold.get(tag.getString("CrimeCommited")), tag.getInt("TimeSince")));
-		} 
-
-		ListTag list4 = pCompound.getList("TrustTimer", 10);
+		}
+		
+		ListTag list2 = pCompound.getList("TrustTimers", 10);
 		this.trustTimer = new HashMap<>();
-		for (int i = 0; i < list4.size(); i++) {
-			CompoundTag tag = list4.getCompound(i);
+		for (int i = 0; i < list2.size(); i++) {
+			CompoundTag tag = list2.getCompound(i);
 			this.trustTimer.put(NbtUtils.loadUUID(tag.get("UUID")), tag.getInt("Timer"));
 		}
-
-		ListTag list5 = pCompound.getList("Untrustworthy", 11);
+		
+		ListTag list4 = pCompound.getList("Untrustworthy", 8);
 		this.untrustworthy = new ArrayList<>();
-		for (int i = 0; i < list5.size(); i++) {
-			this.untrustworthy.add(NbtUtils.loadUUID(list5.get(i)));
+		for (int i = 0; i < list4.size(); i++) {
+			this.untrustworthy.add(NbtUtils.loadUUID(list4.get(i)));
 		}
-
-		ListTag list6 = pCompound.getList("RecentlyTakenBribe", 10);
+		
+		ListTag list5 = pCompound.getList("RecentlyTakenBribe", 10);
 		this.recentlyTakenBribe = new HashMap<>();
-		for (int i = 0; i < list6.size(); i++) {
-			CompoundTag tag = list6.getCompound(i);
+		for (int i = 0; i < list5.size(); i++) {
+			CompoundTag tag = list5.getCompound(i);
 			this.recentlyTakenBribe.put(NbtUtils.loadUUID(tag.get("UUID")), tag.getInt("Timer"));
 		}
-
 		this.decidedOnTradingWithDistrusted = pCompound.getBoolean("DecidedOnTradingWithDistrusted");
 		this.tradesWithDistrustedPlayer = pCompound.getString("TradesWithDistrustedPlayer");
 		this.hasRewardedCustomer = pCompound.getBoolean("HasRewardedCustomer");
@@ -149,26 +140,32 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 
 	@Inject(method = "addAdditionalSaveData", at = @At("TAIL"))
 	public void addAdditionalSaveDataInject(CompoundTag pCompound, CallbackInfo ci) {
-		ListTag list1 = new ListTag();
-		blacklisted.forEach((player, timer) -> {
+		ListTag list = new ListTag();
+		trustTimer.forEach((player, timer) -> {
 			CompoundTag tag = new CompoundTag();
 			tag.put("UUID", NbtUtils.createUUID(player));
 			tag.putInt("Timer", timer);
-			list1.add(tag);
+			list.add(tag);
 		});
-		pCompound.put("BlacklistedTimer", list1);
+		pCompound.put("BlacklistedTimer", list);
 
-		ListTag list2 = new ListTag();
-		playersSaidLineTo.forEach(player -> list2.add(NbtUtils.createUUID(player)));
-		pCompound.put("SaidLineTo", list2);
+		ListTag list1 = new ListTag();
+		playersSaidLineTo.forEach(uuid -> {
+			list1.add(NbtUtils.createUUID(uuid));
+		});
+		pCompound.put("SaidLineTo", list1);
 
-		ListTag list8 = new ListTag();
-		playersSaidRecoverLineTo.forEach(player -> list8.add(NbtUtils.createUUID(player)));
-		pCompound.put("RecoverSaidLineTo", list8);
+		ListTag list12 = new ListTag();
+		playersSaidRecoverLineTo.forEach(uuid -> {
+			list12.add(NbtUtils.createUUID(uuid));
+		});
+		pCompound.put("RecoverSaidLineTo", list12);
 
-		ListTag list7 = new ListTag();
-		playersSaidUntrustworthyLineTo.forEach(player -> list7.add(NbtUtils.createUUID(player)));
-		pCompound.put("UntrustworthySaidLineTo", list7);
+		ListTag list13 = new ListTag();
+		playersSaidUntrustworthyLineTo.forEach(uuid -> {
+			list13.add(NbtUtils.createUUID(uuid));
+		});
+		pCompound.put("UntrustworthySaidLineTo", list13);
 
 		ListTag list3 = new ListTag();
 		recentlyWitnessedCrime.forEach((player, crime) -> {
@@ -178,21 +175,22 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 			tag.putInt("TimeSince", crime.getB());
 			list3.add(tag);
 		});
-		pCompound.put("RecentlyWitnessedCrime", list3);
+		pCompound.put("WitnessedCrimes", list3);
 
-
-		ListTag list4 = new ListTag();
+		ListTag list2 = new ListTag();
 		trustTimer.forEach((player, timer) -> {
 			CompoundTag tag = new CompoundTag();
 			tag.put("UUID", NbtUtils.createUUID(player));
 			tag.putInt("Timer", timer);
-			list4.add(tag);
+			list2.add(tag);
 		});
-		pCompound.put("TrustTimer", list4);
+		pCompound.put("TrustTimers", list2);
 
-		ListTag list5 = new ListTag();
-		untrustworthy.forEach(player -> list5.add(NbtUtils.createUUID(player)));
-		pCompound.put("Untrustworthy", list5);
+		ListTag list4 = new ListTag();
+		untrustworthy.forEach(uuid -> {
+			list4.add(NbtUtils.createUUID(uuid));
+		});
+		pCompound.put("Untrustworthy", list4);
 
 		ListTag list6 = new ListTag();
 		recentlyTakenBribe.forEach((player, timer) -> {
@@ -211,30 +209,31 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 
 	@Inject(method = "mobInteract", at = @At("HEAD"), cancellable = true)
 	public void mobInteractInject(Player pPlayer, InteractionHand pHand, CallbackInfoReturnable<InteractionResult> cir) {
-		if (!this.isBaby()) {
+		Villager villager = (Villager) (Object) this;
+		if (!villager.isBaby()) {
 			IModdedEntity modded = (IModdedEntity)pPlayer;
-			switch (acceptBribe(pPlayer, pPlayer.getItemInHand(pHand), random)) {
+			switch (acceptBribe(pPlayer, pPlayer.getItemInHand(pHand), villager.getRandom())) {
 			case Accepted:
-				if (!level.isClientSide) {
+				if (!villager.level().isClientSide()) {
 					blacklisted.remove(pPlayer.getUUID());
 					new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.rare_bribe_success), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 				}
-				cir.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+				cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 				break;
 			case Rejected:
-				if (!level.isClientSide) {
+				if (!villager.level().isClientSide()) {
 					new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.common_bribe_fail), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 				}
 				setUnhappy();
-				cir.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+				cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 				break;
 			default:
-				if (!level.isClientSide && modded.getData().IsWeary())
-					level.broadcastEntityEvent((Villager)(Object)this, (byte)13); //Does the angry particles
+				if (!villager.level().isClientSide() && modded.getData().IsWeary())
+					villager.level().broadcastEntityEvent(villager, (byte)13); //Does the angry particles
 				if (modded.getData().IsDistrusted()) {
 					if (!this.decidedOnTradingWithDistrusted) {
-						if (this.random.nextInt(2) == 0) {
-							this.tradesWithDistrustedPlayer = ObVille.LINES_CONFIG.distrusted_lines.get(random.nextInt(ObVille.LINES_CONFIG.distrusted_lines.size()));
+						if (villager.getRandom().nextInt(2) == 0) {
+							this.tradesWithDistrustedPlayer = ObVille.LINES_CONFIG.distrusted_lines.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrusted_lines.size()));
 						}
 						this.decidedOnTradingWithDistrusted = true;
 					}
@@ -246,49 +245,46 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 						playersSaidRecoverLineTo.remove(pPlayer.getUUID());
 					}
 					if (tradesWithDistrustedPlayer.length() > 0 || untrustworthy.contains(pPlayer.getUUID())) {
-						if (!level.isClientSide) {
+						if (!villager.level().isClientSide()) {
 							if (untrustworthy.contains(pPlayer.getUUID())) {
 								if (!ObVille.MOD_CONFIG.one_liners) {
-									Component message = fromVillager(new TextComponent(ObVille.LINES_CONFIG.distrustedAgain.get(random.nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
-									ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()), ((ServerPlayer)pPlayer).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+									Component message = fromVillager(Component.literal(ObVille.LINES_CONFIG.distrustedAgain.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
+									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 								}
 								else if (!playersSaidUntrustworthyLineTo.contains(pPlayer.getUUID())) {
-									Component message = fromVillager(new TextComponent(ObVille.LINES_CONFIG.distrustedAgain.get(random.nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
-									ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()), ((ServerPlayer)pPlayer).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+									Component message = fromVillager(Component.literal(ObVille.LINES_CONFIG.distrustedAgain.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
+									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 								}
 								playersSaidUntrustworthyLineTo.add(pPlayer.getUUID());
-//								new ClientboundVillagerMessagePacket(fromVillager(new TextComponent("UNTRUSTWORTHY")), pPlayer.getUUID()).send((ServerPlayer)pPlayer);;
 							}
 							else {
 								if (!ObVille.MOD_CONFIG.one_liners) {
 									Component message = fromVillager(ObVille.LINES_CONFIG.distrusted_lines);
-									ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()), ((ServerPlayer)pPlayer).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 								}
 								else if (!playersSaidLineTo.contains(pPlayer.getUUID())) {
-									Component message = new TextComponent(tradesWithDistrustedPlayer);
-									if (getTags().contains("villagernames.named"))
-										message = getCustomName().copy().append(": ").append(message);
+									Component message = Component.literal(tradesWithDistrustedPlayer);
+									if (villager.getTags().contains("villagernames.named"))
+										message = villager.getCustomName().copy().append(": ").append(message);
 									else
-										message = getName().copy().append(": ").append(message);
-									ObVille.getInstance().channel.sendTo(new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()), ((ServerPlayer)pPlayer).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+										message = villager.getName().copy().append(": ").append(message);
+									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 								}
 								playersSaidLineTo.add(pPlayer.getUUID());
-//								new ClientboundVillagerMessagePacket(fromVillager(new TextComponent("DISTRUSTED")), pPlayer.getUUID()).send((ServerPlayer)pPlayer);;
 							}
 							setUnhappy();
 						}
-						cir.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+						cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 					}
 				}
 				else if (modded.getData().IsExiled() || blacklisted.containsKey(pPlayer.getUUID())) {
-					if (!level.isClientSide) {
+					if (!villager.level().isClientSide()) {
 						setUnhappy();
 						if (blacklisted.containsKey(pPlayer.getUUID())) {
-							new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.blacklisted), pPlayer.getUUID()).send((ServerPlayer)pPlayer);;
-//							new ClientboundVillagerMessagePacket(fromVillager(new TextComponent("BLACKLISTED "+blacklisted.get(pPlayer.getUUID()))), pPlayer.getUUID()).send((ServerPlayer)pPlayer);;
+							new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.blacklisted), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 						}
 					}
-					cir.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+					cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 				}
 				else if (!modded.getData().IsExiled()) {
 					if (playersSaidLineTo.contains(pPlayer.getUUID())) {
@@ -301,14 +297,13 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 					}
 
 					if (trustTimer.containsKey(pPlayer.getUUID())) {
-						if (!level.isClientSide) {
+						if (!villager.level().isClientSide()) {
 							if (!ObVille.MOD_CONFIG.one_liners || !playersSaidRecoverLineTo.contains(pPlayer.getUUID())) {
 								new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.recoverFromDistrusted), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
 							}
 							playersSaidRecoverLineTo.add(pPlayer.getUUID());
-//							new ClientboundVillagerMessagePacket(fromVillager(new TextComponent("RECOVER "+trustTimer.get(pPlayer.getUUID()))), pPlayer.getUUID()).send((ServerPlayer)pPlayer);;
 						}
-						cir.setReturnValue(InteractionResult.sidedSuccess(this.level.isClientSide));
+						cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 					} else {
 						if (playersSaidRecoverLineTo.contains(pPlayer.getUUID())) {
 							playersSaidRecoverLineTo.remove(pPlayer.getUUID());
@@ -320,7 +315,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 					}
 				}
 				if (modded.getData().IsWelcome() && blacklisted.containsKey(pPlayer.getUUID())) {
-					blacklisted.remove(pPlayer.getUUID());//I wasn't asked to do this, I did this of my own volition
+					blacklisted.remove(pPlayer.getUUID());
 				}	
 				break;
 			}
@@ -332,7 +327,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 	public void rewardTradeXpInject(CallbackInfo ci) {
 		System.out.println(getVillagerData().getLevel()+" "+(lastTradedPlayer == null));
 		if (!hasRewardedCustomer && getVillagerData().getLevel() == 4 && shouldIncreaseLevel() && lastTradedPlayer instanceof IModdedEntity player) {
-			ObVille.getInstance().channel.sendTo(new ClientboundSoundPacket(true, lastTradedPlayer.getUUID()), ((ServerPlayer)lastTradedPlayer).connection.getConnection(), NetworkDirection.PLAY_TO_CLIENT);
+			new ClientboundSoundPacket(true, lastTradedPlayer.getUUID()).send((ServerPlayer) lastTradedPlayer);
 			player.getData().incrementReputation(ObVille.REPUTATION_CONFIG.max_trade);
 			VillageData.invalidateGounty((ServerPlayer)lastTradedPlayer);
 			hasRewardedCustomer = true;
@@ -351,15 +346,16 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 
 	@Inject(method = "updateSpecialPrices", at = @At("TAIL"))
 	public void updateSpecialPricesInject(Player pPlayer, CallbackInfo ci) {
+		Villager villager = (Villager) (Object) this;
 		IModdedEntity modded = (IModdedEntity)pPlayer;
 		if (this.affectedByWeary == 0)
-			this.affectedByWeary = this.random.nextInt(9)+1;
+			this.affectedByWeary = villager.getRandom().nextInt(9)+1;
 
 		boolean flag = modded.getData().IsWeary() && this.affectedByWeary >= 5;
 		if (modded.getData().IsDistrusted() && decidedOnTradingWithDistrusted && tradesWithDistrustedPlayer.length() == 0)
 			flag = true;
 		if (flag) {
-			for(MerchantOffer merchantoffer1 : this.getOffers()) {
+			for(MerchantOffer merchantoffer1 : villager.getOffers()) {
 				int k = -10;
 				double d0 = 0.3D + 0.0625D * (double)k;
 				int j = (int)Math.floor(d0 * (double)merchantoffer1.getBaseCostA().getCount());
@@ -367,7 +363,7 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 			}
 		}
 		else if (modded.getData().IsWelcome() && !pPlayer.hasEffect(MobEffects.HERO_OF_THE_VILLAGE)) {
-			for(MerchantOffer merchantoffer1 : this.getOffers()) {
+			for(MerchantOffer merchantoffer1 : villager.getOffers()) {
 				int k = 10;
 				double d0 = 0.3D + 0.0625D * (double)k;
 				int j = (int)Math.floor(d0 * (double)merchantoffer1.getBaseCostA().getCount());
@@ -378,10 +374,11 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 
 	@Override
 	public void blacklist(ServerPlayer player) {
+		Villager villager = (Villager) (Object) this;
 		if (!blacklisted.containsKey(player.getUUID())) {
 			blacklisted.put(player.getUUID(), ObVille.MOD_CONFIG.blacklisted);
 		}
-		level.broadcastEntityEvent((Villager)(Object)this, (byte)13);
+		villager.level().broadcastEntityEvent(villager, (byte)13);
 	}
 
 	@Override
@@ -419,7 +416,4 @@ public abstract class VillagerMixin extends AbstractVillager implements Villager
 	public Villager me() {
 		return (Villager)(Object)this;
 	}
-
-	//For the chief
-
 }
