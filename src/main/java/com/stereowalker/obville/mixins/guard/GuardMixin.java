@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -20,6 +21,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import tallestegg.guardvillagers.common.entities.Guard;
 
@@ -70,6 +72,11 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 	
 	@Inject(method = "tick", at = @At("HEAD"))
 	public void t(CallbackInfo ci) {
+		Guard guard = (Guard) (Object) this;
+		if (guard.level().isClientSide()) {
+			return;
+		}
+
 		if (followedtime >= 300 && followedCriminal != null) {
 			follow(null);
 		}

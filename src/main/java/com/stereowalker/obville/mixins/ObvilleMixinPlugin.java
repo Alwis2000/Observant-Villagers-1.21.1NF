@@ -19,12 +19,26 @@ public class ObvilleMixinPlugin implements IMixinConfigPlugin {
 
     @Override
     public boolean shouldApplyMixin(String targetClassName, String mixinClassName) {
-    	if (mixinClassName.contains("mixins.guard"))
-        {
-            try{Class.forName("tallestegg.guardvillagers.configuration.GuardConfig");return true;}
-            catch (ClassNotFoundException e){return false;}
+        boolean hasGuard = net.neoforged.fml.loading.LoadingModList.get().getModFileById("guardvillagers") != null;
+        boolean hasTalk = net.neoforged.fml.loading.LoadingModList.get().getModFileById("talk_balloons") != null;
+
+        if (mixinClassName.contains("GuardTalkBalloonsMixin")) {
+            return hasGuard && hasTalk;
         }
-    	else return true;
+
+        if (mixinClassName.contains("mixins.guard")) {
+            return hasGuard;
+        }
+
+        if (mixinClassName.contains("VillagerTalkBalloonsMixin")) {
+            return hasTalk;
+        }
+
+        if (mixinClassName.contains("client.LivingEntityRendererMixin")) {
+            return hasTalk;
+        }
+
+        return true;
     }
 
     @Override

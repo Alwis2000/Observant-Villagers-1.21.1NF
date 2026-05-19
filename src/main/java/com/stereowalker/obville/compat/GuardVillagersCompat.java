@@ -9,6 +9,7 @@ import com.stereowalker.obville.interfaces.IPlayerFollower;
 import com.stereowalker.obville.interfaces.IVillager;
 import com.stereowalker.obville.network.protocol.game.ClientboundVillagerMessagePacket;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -39,7 +40,9 @@ public class GuardVillagersCompat {
 			if (vg.crimesWitnessed().get(player.getUUID()) >= 3) {
 				target(guard, player);
 			} else {
-				new ClientboundVillagerMessagePacket(vg.fromVillager(ObVille.LINES_CONFIG.guardCaught), player.getUUID()).send((ServerPlayer)player);
+				String cleanLine = ObVille.LINES_CONFIG.guardCaught.get(guard.getRandom().nextInt(ObVille.LINES_CONFIG.guardCaught.size()));
+				Component cleanMessage = Component.literal(cleanLine);
+				new ClientboundVillagerMessagePacket(vg.fromVillager(cleanMessage), player.getUUID(), guard, cleanMessage).send((ServerPlayer)player);
 				if (guard instanceof IPlayerFollower follower && guard.getRandom().nextFloat() < ObVille.MOD_CONFIG.guardFollow) {
 					follower.setFollowedCriminal(player);
 				}

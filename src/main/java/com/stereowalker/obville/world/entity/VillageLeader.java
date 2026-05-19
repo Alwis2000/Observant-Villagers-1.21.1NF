@@ -120,17 +120,19 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 		if (followedCriminal != null && distanceTo(followedCriminal) <= 4f && !hasSpokenOnContact) {
 			followedtime = 0;
 			hasSpokenOnContact = true;
-			Component message = Component.translatable("obville.messages.need_to_talk");
+			Component cleanMessage = Component.translatable("obville.messages.need_to_talk");
+			Component message = cleanMessage;
 			if (hasCustomName())
-				message = getCustomName().copy().append(": ").append(message);
-			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID()).send((ServerPlayer)followedCriminal);
+				message = getCustomName().copy().append(": ").append(cleanMessage);
+			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage).send((ServerPlayer)followedCriminal);
 		}
 		if (followedtime >= 300 && followedCriminal != null) {
 			followedtime = 0;
-			Component message = Component.translatable("obville.messages.need_to_talk");
+			Component cleanMessage = Component.translatable("obville.messages.need_to_talk");
+			Component message = cleanMessage;
 			if (hasCustomName())
-				message = getCustomName().copy().append(": ").append(message);
-			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID()).send((ServerPlayer)followedCriminal);
+				message = getCustomName().copy().append(": ").append(cleanMessage);
+			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage).send((ServerPlayer)followedCriminal);
 		}
 	}
 
@@ -156,7 +158,8 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 			System.out.println("Check Player");
 			if (pPlayer instanceof ServerPlayer serv) {
 				if (ObVille.isPotentialBandit(serv)) {
-					new ClientboundVillagerMessagePacket(fromVillager(Component.translatable("obville.chat.no_bandits")), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+					Component cleanMessage = Component.translatable("obville.chat.no_bandits");
+					new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), this, cleanMessage).send((ServerPlayer)pPlayer);
 					return InteractionResult.sidedSuccess(this.level().isClientSide);
 				}
 				else if (flag) {
@@ -182,12 +185,13 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	@Override
 	public void setTradingPlayer(Player pPlayer) {
 		if (pPlayer != null && !this.level().isClientSide && redemptionTradesPerformed > 0 && getTradingPlayer() != null && pPlayer == null) {
-			Component message = Component.literal(ObVille.LINES_CONFIG.leader_lines.get(random.nextInt(ObVille.LINES_CONFIG.leader_lines.size())));
+			Component cleanMessage = Component.literal(ObVille.LINES_CONFIG.leader_lines.get(random.nextInt(ObVille.LINES_CONFIG.leader_lines.size())));
+			Component message = cleanMessage;
 			if (getTags().contains("villagernames.named"))
-				message = getCustomName().copy().append(": ").append(message);
+				message = getCustomName().copy().append(": ").append(cleanMessage);
 			else
-				message = getTypeName().copy().append(": ").append(message);
-			new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID()).send((ServerPlayer)getTradingPlayer());
+				message = getTypeName().copy().append(": ").append(cleanMessage);
+			new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage).send((ServerPlayer)getTradingPlayer());
 			redemptionTradesPerformed = 0;
 		}
 		super.setTradingPlayer(pPlayer);
@@ -283,12 +287,13 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 					PlacedBlocks pb = PlacedBlocks.getInstance(server);
 					pb.villages.get(currentVillage).generatedBounties.remove(pOffer.getCostA());
 					data.incrementReputation(ObVille.REPUTATION_CONFIG.bounty);
-					Component message = Component.literal(ObVille.LINES_CONFIG.bounty.get(random.nextInt(ObVille.LINES_CONFIG.bounty.size())));
+					Component cleanMessage = Component.literal(ObVille.LINES_CONFIG.bounty.get(random.nextInt(ObVille.LINES_CONFIG.bounty.size())));
+					Component message = cleanMessage;
 					if (getTags().contains("villagernames.named"))
-						message = getCustomName().copy().append(": ").append(message);
+						message = getCustomName().copy().append(": ").append(cleanMessage);
 					else
-						message = getTypeName().copy().append(": ").append(message);
-					new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID()).send((ServerPlayer)getTradingPlayer());
+						message = getTypeName().copy().append(": ").append(cleanMessage);
+					new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage).send((ServerPlayer)getTradingPlayer());
 				}
 			}
 		}

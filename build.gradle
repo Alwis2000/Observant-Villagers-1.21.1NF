@@ -147,14 +147,19 @@ dependencies {
     implementation "curse.maven:choicetheorems-overhauled-village-623908:7788733"
     implementation "curse.maven:balm-531761:7420963"
     implementation "curse.maven:unionlib-367806:7402936"
-    compileOnly "curse.maven:guard-villagers-360203:7704203"
+    implementation "curse.maven:guard-villagers-360203:8112026"
     implementation "curse.maven:farmers-delight-398521:8083481"
     implementation "curse.maven:lithostitched-936015:8101993"
 
+    //Talk Balloons compat
     implementation "curse.maven:talk-balloons-992601:7362312"
     implementation "curse.maven:cloth-config-348521:5729127"
     implementation "curse.maven:modernnetworking-1251794:7398398"
     implementation "curse.maven:kotlinlangforge-1244682:8075658"
+
+    // Villager Names compat
+    implementation "curse.maven:villager-names-345854:8021602"
+    implementation "curse.maven:collective-342584:8021351"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

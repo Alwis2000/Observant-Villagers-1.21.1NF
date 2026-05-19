@@ -24,10 +24,13 @@
 		"VillagerMixin",
 		"DefendVillageTargetGoalGolemMixin",
 		"guard.DefendVillageTargetGoalGuardMixin",
-		"guard.GuardMixin"
+		"guard.GuardMixin",
+		"VillagerTalkBalloonsMixin",
+		"guard.GuardTalkBalloonsMixin"
 	],
 	"client": [
-		"client.AbstractClientPlayerMixin"
+		"client.AbstractClientPlayerMixin",
+		"client.LivingEntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

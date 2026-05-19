@@ -257,7 +257,10 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 							if (!villager.recentlyWitnessedCrime().containsKey(player.getUUID())) {
 								villager.witnessCrime(player, crimeCommited);
 								new ClientboundOverlayOverridePacket(player.getUUID()).send((ServerPlayer)player);
-								new ClientboundVillagerMessagePacket(villager.fromVillager(LINES_CONFIG.caught), player.getUUID()).send((ServerPlayer)player);
+								Villager villagEntity = vills.get(0);
+								String cleanLine = LINES_CONFIG.caught.get(villagEntity.getRandom().nextInt(LINES_CONFIG.caught.size()));
+								Component cleanMessage = Component.literal(cleanLine);
+								new ClientboundVillagerMessagePacket(villager.fromVillager(cleanMessage), player.getUUID(), villagEntity, cleanMessage).send((ServerPlayer)player);
 							}
 						}
 					}
@@ -295,7 +298,9 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 				IVillager<Villager> villager = (IVillager<Villager>)villag;
 				if (villager.invisibleLineCooldown() <= 0 && !(villag instanceof VillageLeader)) {
 					villager.setInvisibleLineCooldown(MOD_CONFIG.invi);
-					new ClientboundVillagerMessagePacket(villager.fromVillager(LINES_CONFIG.invisible), player.getUUID()).send((ServerPlayer)player);
+					String cleanLine = LINES_CONFIG.invisible.get(villag.getRandom().nextInt(LINES_CONFIG.invisible.size()));
+					Component cleanMessage = Component.literal(cleanLine);
+					new ClientboundVillagerMessagePacket(villager.fromVillager(cleanMessage), player.getUUID(), villag, cleanMessage).send((ServerPlayer)player);
 				}
 			});
 			final Crime cc = crimeCommited;

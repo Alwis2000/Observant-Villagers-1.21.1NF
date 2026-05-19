@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -57,9 +58,15 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 	private boolean decidedOnTradingWithDistrusted = false;
 	private boolean hasRewardedCustomer = false;
 	private int affectedByWeary = 0;
+	private Map<UUID, Integer> talkBackCooldown = new HashMap<>();
 
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void ticker(CallbackInfo ci) {
+		Villager villager = (Villager) (Object) this;
+		if (villager.level().isClientSide()) {
+			return;
+		}
+
 		List<UUID> timersToRemove1 = new ArrayList<>();
 		List<UUID> timersToRemove2 = new ArrayList<>();
 		List<UUID> timersToRemove3 = new ArrayList<>();
@@ -82,6 +89,21 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 		});
 
 		if (invi > 0) invi--;
+
+		if (this.talkBackCooldown == null) {
+			this.talkBackCooldown = new HashMap<>();
+		}
+		List<UUID> cooldownsToRemove = new ArrayList<>();
+		this.talkBackCooldown.replaceAll((key, value) -> {
+			if (value <= 1) {
+				cooldownsToRemove.add(key);
+				this.playersSaidLineTo.remove(key);
+				this.playersSaidUntrustworthyLineTo.remove(key);
+				this.playersSaidRecoverLineTo.remove(key);
+			}
+			return value - 1;
+		});
+		cooldownsToRemove.forEach(this.talkBackCooldown::remove);
 
 		timersToRemove1.forEach(trustTimer::remove);
 		timersToRemove2.forEach(blacklisted::remove);
@@ -216,13 +238,17 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 			case Accepted:
 				if (!villager.level().isClientSide()) {
 					blacklisted.remove(pPlayer.getUUID());
-					new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.rare_bribe_success), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+					String cleanLine = ObVille.LINES_CONFIG.rare_bribe_success.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.rare_bribe_success.size()));
+					Component cleanMessage = Component.literal(cleanLine);
+					new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
 				}
 				cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 				break;
 			case Rejected:
 				if (!villager.level().isClientSide()) {
-					new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.common_bribe_fail), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+					String cleanLine = ObVille.LINES_CONFIG.common_bribe_fail.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.common_bribe_fail.size()));
+					Component cleanMessage = Component.literal(cleanLine);
+					new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
 				}
 				setUnhappy();
 				cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
@@ -247,30 +273,34 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 					if (tradesWithDistrustedPlayer.length() > 0 || untrustworthy.contains(pPlayer.getUUID())) {
 						if (!villager.level().isClientSide()) {
 							if (untrustworthy.contains(pPlayer.getUUID())) {
-								if (!ObVille.MOD_CONFIG.one_liners) {
-									Component message = fromVillager(Component.literal(ObVille.LINES_CONFIG.distrustedAgain.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
-									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+								boolean shouldSend = !ObVille.MOD_CONFIG.one_liners || !playersSaidUntrustworthyLineTo.contains(pPlayer.getUUID());
+								if (shouldSend) {
+									String cleanLine = ObVille.LINES_CONFIG.distrustedAgain.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()));
+									Component cleanMessage = Component.literal(cleanLine);
+									new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+									playersSaidUntrustworthyLineTo.add(pPlayer.getUUID());
+									if (this.talkBackCooldown == null) this.talkBackCooldown = new HashMap<>();
+									this.talkBackCooldown.put(pPlayer.getUUID(), 100);
 								}
-								else if (!playersSaidUntrustworthyLineTo.contains(pPlayer.getUUID())) {
-									Component message = fromVillager(Component.literal(ObVille.LINES_CONFIG.distrustedAgain.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrustedAgain.size()))));
-									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
-								}
-								playersSaidUntrustworthyLineTo.add(pPlayer.getUUID());
 							}
 							else {
 								if (!ObVille.MOD_CONFIG.one_liners) {
-									Component message = fromVillager(ObVille.LINES_CONFIG.distrusted_lines);
-									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+									String cleanLine = ObVille.LINES_CONFIG.distrusted_lines.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.distrusted_lines.size()));
+									Component cleanMessage = Component.literal(cleanLine);
+									new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
 								}
 								else if (!playersSaidLineTo.contains(pPlayer.getUUID())) {
-									Component message = Component.literal(tradesWithDistrustedPlayer);
+									Component cleanMessage = Component.literal(tradesWithDistrustedPlayer);
+									Component message = cleanMessage;
 									if (villager.getTags().contains("villagernames.named"))
-										message = villager.getCustomName().copy().append(": ").append(message);
+										message = villager.getCustomName().copy().append(": ").append(cleanMessage);
 									else
-										message = villager.getName().copy().append(": ").append(message);
-									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+										message = villager.getName().copy().append(": ").append(cleanMessage);
+									new ClientboundVillagerMessagePacket(message, pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+									playersSaidLineTo.add(pPlayer.getUUID());
+									if (this.talkBackCooldown == null) this.talkBackCooldown = new HashMap<>();
+									this.talkBackCooldown.put(pPlayer.getUUID(), 100);
 								}
-								playersSaidLineTo.add(pPlayer.getUUID());
 							}
 							setUnhappy();
 						}
@@ -281,7 +311,9 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 					if (!villager.level().isClientSide()) {
 						setUnhappy();
 						if (blacklisted.containsKey(pPlayer.getUUID())) {
-							new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.blacklisted), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+							String cleanLine = ObVille.LINES_CONFIG.blacklisted.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.blacklisted.size()));
+							Component cleanMessage = Component.literal(cleanLine);
+							new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
 						}
 					}
 					cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
@@ -299,9 +331,13 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 					if (trustTimer.containsKey(pPlayer.getUUID())) {
 						if (!villager.level().isClientSide()) {
 							if (!ObVille.MOD_CONFIG.one_liners || !playersSaidRecoverLineTo.contains(pPlayer.getUUID())) {
-								new ClientboundVillagerMessagePacket(fromVillager(ObVille.LINES_CONFIG.recoverFromDistrusted), pPlayer.getUUID()).send((ServerPlayer)pPlayer);
+								String cleanLine = ObVille.LINES_CONFIG.recoverFromDistrusted.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.recoverFromDistrusted.size()));
+								Component cleanMessage = Component.literal(cleanLine);
+								new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+								playersSaidRecoverLineTo.add(pPlayer.getUUID());
+								if (this.talkBackCooldown == null) this.talkBackCooldown = new HashMap<>();
+								this.talkBackCooldown.put(pPlayer.getUUID(), 100);
 							}
-							playersSaidRecoverLineTo.add(pPlayer.getUUID());
 						}
 						cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 					} else {
