@@ -150,6 +150,11 @@ dependencies {
     compileOnly "curse.maven:guard-villagers-360203:7704203"
     implementation "curse.maven:farmers-delight-398521:8083481"
     implementation "curse.maven:lithostitched-936015:8101993"
+
+    implementation "curse.maven:talk-balloons-992601:7362312"
+    implementation "curse.maven:cloth-config-348521:5729127"
+    implementation "curse.maven:modernnetworking-1251794:7398398"
+    implementation "curse.maven:kotlinlangforge-1244682:8075658"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

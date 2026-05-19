@@ -60,8 +60,6 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.material.Fluid;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.api.distmarker.OnlyIn;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
@@ -129,6 +127,8 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 			modEventBus.addListener(this::registerLayerDefinitions);
 			modEventBus.addListener(GuiHelper::registerOverlays);
 		}
+		modEventBus.addListener(this::registerAttributes);
+
 		Laws.bootstrap();
 	}
 
@@ -345,9 +345,15 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 		collector.addCustom(net.minecraft.core.registries.Registries.MEMORY_MODULE_TYPE, custom -> {
 			custom.register(net.minecraft.resources.ResourceLocation.parse("obville:leader_detected_recently"), ModMemories.LEADER_DETECTED_RECENTLY.value().get());
 		});
+		
 	}
 
 	public static ObVille getInstance() {
 		return instance;
 	}
+
+	private void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
+		event.put(ModEntities.VILLAGE_CHIEF.value().get(), VillageLeader.createAttributes().build());
+	}
+
 }

@@ -512,11 +512,5 @@ public class ModEvents {
 		}
 	}
 
-	@EventBusSubscriber(modid = ObVille.MOD_ID, bus = EventBusSubscriber.Bus.MOD)
-	public static class ModBusEvents {
-		@SubscribeEvent
-		public static void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {
-			event.put(com.stereowalker.obville.world.entity.ModEntities.VILLAGE_CHIEF.value().get(), VillageLeader.createAttributes().build());
-		}
-	}
+
 }
