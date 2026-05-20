@@ -212,9 +212,12 @@ public class OVModData extends BaseData {
 	}
 
 	public boolean IsWearyAt(int village) {
-		if (village >= 0)
-			return this.getReputationIn(village) <= -4 && this.getReputationIn(village) > -8;
-			return false;
+		if (village < 0) return false;
+		if (IsExiledAt(village) || IsDistrustedAt(village)) return false;
+		
+		if (this.getReputationIn(village) <= -4) return true;
+		
+		return false;
 	}
 
 	public boolean IsWeary() {
@@ -222,9 +225,12 @@ public class OVModData extends BaseData {
 	}
 
 	public boolean IsDistrustedAt(int village) {
-		if (village >= 0)
-			return this.getReputationIn(village) <= -8 && this.reputation.get(village) > -14;
-			return false;
+		if (village < 0) return false;
+		if (IsExiledAt(village)) return false;
+		
+		if (this.getReputationIn(village) <= -8) return true;
+		
+		return false;
 	}
 
 	public boolean IsDistrusted() {
@@ -275,7 +281,7 @@ public class OVModData extends BaseData {
 		return this.previousVillage;
 	}
 
-	private int getReputationIn(int village) {
+	public int getReputationIn(int village) {
 		return reputation.getOrDefault(village, 0);
 	}
 

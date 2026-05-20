@@ -49,22 +49,24 @@ public class PlacedBlocks extends SavedData
     }
     
     public int isVillageOrRegisterVillage(ServerLevel level, BlockPos pos) {
-    	int last = 1;
+    	int last = 0;
     	for (Integer village : villages.keySet()) {
     		if (village == 0) continue;
-    		last++;
+    		if (village >= last) last = village + 1;
     		AABB bounds = new AABB(net.minecraft.world.phys.Vec3.atLowerCornerOf(villages.get(village).bounds.getLeft()), net.minecraft.world.phys.Vec3.atLowerCornerOf(villages.get(village).bounds.getRight()));
     		if (bounds.contains(pos.getX(), pos.getY(), pos.getZ())) {
     			return village;
-    		} else if (villages.get(village).bounds.getLeft().distSqr(pos) < 10 || villages.get(village).bounds.getRight().distSqr(pos) < 10) {
+    		} else if (bounds.inflate(10).contains(pos.getX(), pos.getY(), pos.getZ())) {
+    			// Player is near this village, expand its bounds to include the new position
     			AABB newBounds = bounds.minmax(new AABB(pos));
-    			VillageData dat = new VillageData();
+    			VillageData dat = villages.get(village);
     			dat.bounds = Pair.of(BlockPos.containing(newBounds.minX, newBounds.minY, newBounds.minZ), 
-    	    			BlockPos.containing(newBounds.maxX, newBounds.maxY, newBounds.maxZ));
-    			villages.put(last, dat);
+    	    		BlockPos.containing(newBounds.maxX, newBounds.maxY, newBounds.maxZ));
+    			setDirty();
     			return village;
     		}
     	}
+    	if (last == 0) last = 1;
     	
     	BlockPos yPlus = pos.above();
     	while(level.isCloseToVillage(yPlus, 2)) yPlus = yPlus.above();
@@ -88,6 +90,7 @@ public class PlacedBlocks extends SavedData
 		dat.bounds = Pair.of(new BlockPos(xPlus.getX(), yPlus.getY(), zPlus.getZ()), 
     			new BlockPos(xMinus.getX(), yMinus.getY(), zMinus.getZ()));
 		villages.put(last, dat);
+		setDirty();
     	return last;
     }
 

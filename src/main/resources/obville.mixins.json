@@ -27,7 +27,9 @@
 		"guard.DefendVillageTargetGoalGuardMixin",
 		"guard.GuardMixin",
 		"VillagerTalkBalloonsMixin",
-		"guard.GuardTalkBalloonsMixin"
+		"guard.GuardTalkBalloonsMixin",
+		"WanderingTraderMixin",
+		"LivingEntityMixin"
 	],
 	"client": [
 		"client.AbstractClientPlayerMixin",

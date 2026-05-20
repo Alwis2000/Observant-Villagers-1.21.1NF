@@ -53,12 +53,16 @@ public class ClientboundVillagerMessagePacket extends ClientboundUnionPacket {
 	@Override
 	public boolean handleOnClient(LocalPlayer player) {
 		if (uuid.equals(player.getUUID())) {
-			player.sendSystemMessage(message);
+			boolean shownInBalloon = false;
 			if (villagerEntityId != -1 && player.level() != null && net.neoforged.fml.ModList.get().isLoaded("talk_balloons")) {
 				Entity entity = player.level().getEntity(villagerEntityId);
 				if (entity != null) {
 					com.stereowalker.obville.compat.TalkBalloonsCompat.createBalloon(entity, cleanMessage);
+					shownInBalloon = true;
 				}
+			}
+			if (!shownInBalloon) {
+				player.sendSystemMessage(message);
 			}
 		}
 		return true;

@@ -57,7 +57,29 @@ public class ModConfig implements ConfigObject {
 	@UnionConfig.Entry(name = "Global Reputation", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"Should the player's reputation be restricted to a single village or should it affect all villages.","Changing this will make your reputation what it was before this was changed.",
 			"If you were exiled when it was global and you made it local to each village, changing this back will make you exiled globally and vice versa"})
-	public boolean global_rep = true;
+	public boolean global_rep = false;
+	
+	@UnionConfig.Entry(name = "Hybrid Reputation", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"Should distrust or exile in one village affect other villages (making you weary or distrusted in them) when local reputation is enabled?"})
+	public boolean hybrid_rep = true;
+
+	@UnionConfig.Entry(name = "Traders Spread Rumors", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"Should Wandering Traders gather rumors about player crimes and spread them to other villages?"})
+	public boolean traders_spread_rumors = true;
+
+	@UnionConfig.Entry(name = "Rumor Gossip Cooldown", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"Cooldown in ticks between a Wandering Trader gossiping with villagers about player crimes (20 ticks = 1 second)"})
+	@UnionConfig.Range(min = 20.0D, max = 24000.0D)
+	public int rumor_gossip_cooldown = 400;
+
+	@UnionConfig.Entry(name = "Rumor Reputation Decrease", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"How much the player's reputation in the current village decreases when a Wandering Trader gossips about their crimes"})
+	@UnionConfig.Range(min = 1.0D, max = 10.0D)
+	public int rumor_reputation_decrease = 3;
+
+	@UnionConfig.Entry(name = "Traders Refuse Trades", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"Should Wandering Traders refuse to trade with players they carry bad rumors about?"})
+	public boolean traders_refuse_trades = true;
 	
 //	@UnionConfig.Entry(name = "Village Chests/Barrels", side = ConfigSide.Shared)
 //	@UnionConfig.Comment(comment = {"Opening chests or barrels with this loot table will cause a loss in reputation","If you want to modify this, you'll need to first restart the world then kill all the players in your world to have the changes applied to all the players"})

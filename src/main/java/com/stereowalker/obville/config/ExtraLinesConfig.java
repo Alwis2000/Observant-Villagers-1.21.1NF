@@ -301,4 +301,84 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Here is your reward! Keep it up.",
 			"This is your reward, thanks for putting them down."
 			);
+
+	@UnionConfig.Entry(name = "Wandering Trader Refuse Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a Wandering Trader says when they refuse to trade with a criminal they heard rumors about"})
+	public List<String> wandering_trader_refuse = Lists.newArrayList(
+			"I've heard about your misdeeds in other villages. I don't trade with troublemakers!",
+			"Word travels fast on the road. I'm not doing business with a thief.",
+			"I value my safety more than your emeralds. Go away!",
+			"I've heard stories about you... I think it's best if we don't trade."
+			);
+
+	@UnionConfig.Entry(name = "Wandering Trader Gossip Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a Wandering Trader says to local villagers to spread rumors about the player"})
+	public List<String> wandering_trader_gossip = Lists.newArrayList(
+			"I heard that %s caused terrible trouble in the last village...",
+			"Watch your pockets! I heard %s has been stealing from village chests.",
+			"Beware of %s... they are not welcome in the other settlements.",
+			"Be careful, %s is known to break beds and disrupt the peace."
+			);
+
+	@UnionConfig.Entry(name = "Villager Gossip Reaction Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What local villagers say when they hear the gossip from the Wandering Trader"})
+	public List<String> villager_gossip_reaction = Lists.newArrayList(
+			"Is that true? We must keep an eye on them!",
+			"Oh dear... we don't want any trouble here.",
+			"A thief? We will be careful around them.",
+			"Thanks for the warning. We'll watch our step."
+			);
+
+	@UnionConfig.Entry(name = "Exiled Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager will say randomly if you are exiled from their village"})
+	public List<String> exiled_lines = Lists.newArrayList(
+			"You are banished from this village! Get out!",
+			"We don't deal with outlaws. Leave at once!",
+			"Get lost, exile! You have no place here.",
+			"Guards! Keep this exile away from me!"
+			);
+
+	@UnionConfig.Entry(name = "Weary Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager will say randomly if you are weary in their village"})
+	public List<String> weary_lines = Lists.newArrayList(
+			"I'm keeping my eye on you...",
+			"Don't try anything funny.",
+			"I'll trade with you, but I don't like the look of you.",
+			"We are keeping watch. Behave yourself."
+			);
+
+	@UnionConfig.Entry(name = "Villager Physical Gossip Crime Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager says when sharing a crime they witnessed with another villager"})
+	public List<String> villager_physical_gossip_crime = Lists.newArrayList(
+			"I heard %s was caught %s around here!",
+			"Did you hear? %s was caught red-handed committing %s!",
+			"Watch out, I saw %s committing %s not too long ago!"
+			);
+
+	@UnionConfig.Entry(name = "Villager Physical Gossip Untrustworthy Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager says when warning another villager about an untrustworthy player"})
+	public List<String> villager_physical_gossip_untrustworthy = Lists.newArrayList(
+			"Watch out for %s, they are not to be trusted!",
+			"Don't trust %s, they've been causing trouble.",
+			"Be careful around %s, their reputation is terrible."
+			);
+
+	@UnionConfig.Entry(name = "Nice Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a nice villager will say randomly when you interact with them"})
+	public List<String> nice_lines = Lists.newArrayList(
+			"Hello there! How can I help you today?",
+			"Good to see you! Have a look at my wares.",
+			"Greetings, friend! Lovely day we're having.",
+			"Welcome! Please, take your time."
+			);
+
+	@UnionConfig.Entry(name = "Rude Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a rude villager will say randomly when you interact with them"})
+	public List<String> rude_lines = Lists.newArrayList(
+			"What do you want?",
+			"Make it quick, I have things to do.",
+			"Are you going to buy something or just stare?",
+			"Hurry up, time is emeralds."
+			);
 }
+

@@ -59,6 +59,8 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 	private boolean hasRewardedCustomer = false;
 	private int affectedByWeary = 0;
 	private Map<UUID, Integer> talkBackCooldown = new HashMap<>();
+	@Unique
+	private int obville$physicalGossipCooldown = 0;
 
 	@Inject(method = "tick", at = @At("TAIL"))
 	private void ticker(CallbackInfo ci) {
@@ -89,6 +91,7 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 		});
 
 		if (invi > 0) invi--;
+		if (this.obville$physicalGossipCooldown > 0) this.obville$physicalGossipCooldown--;
 
 		if (this.talkBackCooldown == null) {
 			this.talkBackCooldown = new HashMap<>();
@@ -264,8 +267,17 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 				cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
 				break;
 			default:
-				if (!villager.level().isClientSide() && modded.getData().IsWeary())
+				if (!villager.level().isClientSide() && modded.getData().IsWeary()) {
 					villager.level().broadcastEntityEvent(villager, (byte)13); //Does the angry particles
+					if (!ObVille.MOD_CONFIG.one_liners || !playersSaidLineTo.contains(pPlayer.getUUID())) {
+						String cleanLine = ObVille.LINES_CONFIG.weary_lines.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.weary_lines.size()));
+						Component cleanMessage = Component.literal(cleanLine);
+						new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+						playersSaidLineTo.add(pPlayer.getUUID());
+						if (this.talkBackCooldown == null) this.talkBackCooldown = new HashMap<>();
+						this.talkBackCooldown.put(pPlayer.getUUID(), 100);
+					}
+				}
 				if (modded.getData().IsDistrusted()) {
 					if (!this.decidedOnTradingWithDistrusted) {
 						if (villager.getRandom().nextInt(2) == 0) {
@@ -324,6 +336,10 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 							String cleanLine = ObVille.LINES_CONFIG.blacklisted.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.blacklisted.size()));
 							Component cleanMessage = Component.literal(cleanLine);
 							new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+						} else {
+							String cleanLine = ObVille.LINES_CONFIG.exiled_lines.get(villager.getRandom().nextInt(ObVille.LINES_CONFIG.exiled_lines.size()));
+							Component cleanMessage = Component.literal(cleanLine);
+							new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
 						}
 					}
 					cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
@@ -353,6 +369,20 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 					} else {
 						if (playersSaidRecoverLineTo.contains(pPlayer.getUUID())) {
 							playersSaidRecoverLineTo.remove(pPlayer.getUUID());
+						}
+						
+						if (!villager.level().isClientSide() && !modded.getData().IsWeary() && !modded.getData().IsDistrusted()) {
+							if (this.talkBackCooldown == null || !this.talkBackCooldown.containsKey(pPlayer.getUUID())) {
+								boolean isRude = Math.abs(villager.getUUID().hashCode()) % 5 < 2;
+								List<String> lines = isRude ? ObVille.LINES_CONFIG.rude_lines : ObVille.LINES_CONFIG.nice_lines;
+								if (lines != null && !lines.isEmpty()) {
+									String cleanLine = lines.get(villager.getRandom().nextInt(lines.size()));
+									Component cleanMessage = Component.literal(cleanLine);
+									new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), villager, cleanMessage).send((ServerPlayer)pPlayer);
+									if (this.talkBackCooldown == null) this.talkBackCooldown = new HashMap<>();
+									this.talkBackCooldown.put(pPlayer.getUUID(), 100);
+								}
+							}
 						}
 					}
 				} else {
@@ -461,6 +491,148 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 	@Override
 	public Villager me() {
 		return (Villager)(Object)this;
+	}
+
+	@Override
+	public Map<UUID, Integer> obville$getBlacklisted() {
+		return this.blacklisted;
+	}
+
+	@Override
+	public List<UUID> obville$getUntrustworthy() {
+		return this.untrustworthy;
+	}
+
+	@Override
+	public int obville$getPhysicalGossipCooldown() {
+		return this.obville$physicalGossipCooldown;
+	}
+
+	@Override
+	public void obville$setPhysicalGossipCooldown(int cooldown) {
+		this.obville$physicalGossipCooldown = cooldown;
+	}
+
+	@Inject(method = "gossip(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/npc/Villager;J)V", at = @At("HEAD"))
+	private void gossipInject(net.minecraft.server.level.ServerLevel level, Villager target, long gameTime, CallbackInfo ci) {
+		IVillager<?> targetVillager = (IVillager<?>) target;
+
+		// 1. Share witnessed crimes
+		this.recentlyWitnessedCrime.forEach((uuid, tuple) -> {
+			if (!targetVillager.recentlyWitnessedCrime().containsKey(uuid)) {
+				targetVillager.recentlyWitnessedCrime().put(uuid, new Tuple<>(tuple.getA(), tuple.getB()));
+				System.out.println("[ObVille Debug] Villager " + ((Villager)(Object)this).getName().getString() + " shared witnessed crime about Player " + uuid + " with Villager " + target.getName().getString());
+			}
+		});
+		targetVillager.recentlyWitnessedCrime().forEach((uuid, tuple) -> {
+			if (!this.recentlyWitnessedCrime.containsKey(uuid)) {
+				this.recentlyWitnessedCrime.put(uuid, new Tuple<>(tuple.getA(), tuple.getB()));
+				System.out.println("[ObVille Debug] Villager " + target.getName().getString() + " shared witnessed crime about Player " + uuid + " with Villager " + ((Villager)(Object)this).getName().getString());
+			}
+		});
+
+		// 2. Share blacklist timers
+		this.blacklisted.forEach((uuid, timer) -> {
+			if (!targetVillager.obville$getBlacklisted().containsKey(uuid) || targetVillager.obville$getBlacklisted().get(uuid) < timer) {
+				targetVillager.obville$getBlacklisted().put(uuid, timer);
+				System.out.println("[ObVille Debug] Villager " + ((Villager)(Object)this).getName().getString() + " shared blacklist timer (" + timer + ") for Player " + uuid + " with Villager " + target.getName().getString());
+			}
+		});
+		targetVillager.obville$getBlacklisted().forEach((uuid, timer) -> {
+			if (!this.blacklisted.containsKey(uuid) || this.blacklisted.get(uuid) < timer) {
+				this.blacklisted.put(uuid, timer);
+				System.out.println("[ObVille Debug] Villager " + target.getName().getString() + " shared blacklist timer (" + timer + ") for Player " + uuid + " with Villager " + ((Villager)(Object)this).getName().getString());
+			}
+		});
+
+		// 3. Share untrustworthiness
+		this.untrustworthy.forEach(uuid -> {
+			if (!targetVillager.obville$getUntrustworthy().contains(uuid)) {
+				targetVillager.obville$getUntrustworthy().add(uuid);
+				System.out.println("[ObVille Debug] Villager " + ((Villager)(Object)this).getName().getString() + " shared untrustworthiness of Player " + uuid + " with Villager " + target.getName().getString());
+			}
+		});
+		targetVillager.obville$getUntrustworthy().forEach(uuid -> {
+			if (!this.untrustworthy.contains(uuid)) {
+				this.untrustworthy.add(uuid);
+				System.out.println("[ObVille Debug] Villager " + target.getName().getString() + " shared untrustworthiness of Player " + uuid + " with Villager " + ((Villager)(Object)this).getName().getString());
+			}
+		});
+
+		// 4. Physical Gossip dialogue
+		if (this.obville$physicalGossipCooldown <= 0 && targetVillager.obville$getPhysicalGossipCooldown() <= 0) {
+			List<ServerPlayer> playersNearby = level.getEntitiesOfClass(ServerPlayer.class, ((Villager)(Object)this).getBoundingBox().inflate(12.0));
+			if (!playersNearby.isEmpty()) {
+				for (ServerPlayer player : playersNearby) {
+					UUID playerUUID = player.getUUID();
+					
+					boolean hasCrime = this.recentlyWitnessedCrime.containsKey(playerUUID) || targetVillager.recentlyWitnessedCrime().containsKey(playerUUID);
+					boolean isBlacklisted = this.blacklisted.containsKey(playerUUID) || targetVillager.obville$getBlacklisted().containsKey(playerUUID);
+					boolean isUntrustworthy = this.untrustworthy.contains(playerUUID) || targetVillager.obville$getUntrustworthy().contains(playerUUID);
+					
+					IModdedEntity modPlayer = (IModdedEntity) player;
+					boolean isExiled = modPlayer.getData().IsExiledAt(modPlayer.getData().currentVillage());
+					boolean isDistrusted = modPlayer.getData().IsDistrustedAt(modPlayer.getData().currentVillage());
+					
+					if (hasCrime || isBlacklisted || isUntrustworthy || isExiled || isDistrusted) {
+						// 20% chance to speak out loud
+						if (((Villager)(Object)this).getRandom().nextFloat() < 0.20f) {
+							this.obville$physicalGossipCooldown = 300; // 15 seconds
+							targetVillager.obville$setPhysicalGossipCooldown(300);
+							
+							String gossipLine = "";
+							String playerDisplayName = player.getDisplayName().getString();
+							
+							if (isExiled) {
+								gossipLine = "Guards, watch out! " + playerDisplayName + " is banned from this village!";
+							} else if (hasCrime) {
+								Law law = this.recentlyWitnessedCrime.containsKey(playerUUID) ? 
+										this.recentlyWitnessedCrime.get(playerUUID).getA() : 
+										targetVillager.recentlyWitnessedCrime().get(playerUUID).getA();
+								String crimeName = law.crimeIdentifier.replace("_", " ");
+								List<String> crimeLines = ObVille.LINES_CONFIG.villager_physical_gossip_crime;
+								String template = crimeLines.get(((Villager)(Object)this).getRandom().nextInt(crimeLines.size()));
+								gossipLine = String.format(template, playerDisplayName, crimeName);
+							} else if (isBlacklisted) {
+								gossipLine = "Don't get near " + playerDisplayName + "... they were caught committing crimes recently!";
+							} else if (isUntrustworthy || isDistrusted) {
+								List<String> untrustworthyLines = ObVille.LINES_CONFIG.villager_physical_gossip_untrustworthy;
+								String template = untrustworthyLines.get(((Villager)(Object)this).getRandom().nextInt(untrustworthyLines.size()));
+								gossipLine = String.format(template, playerDisplayName);
+							}
+							
+							if (!gossipLine.isEmpty()) {
+								List<String> reactions = ObVille.LINES_CONFIG.villager_gossip_reaction;
+								String reactionLine = reactions.get(((Villager)(Object)this).getRandom().nextInt(reactions.size()));
+								
+								// Send gossip line from this villager to player
+								Component cleanMessage1 = Component.literal(gossipLine);
+								Component formatMessage1 = fromVillager(cleanMessage1);
+								new ClientboundVillagerMessagePacket(formatMessage1, playerUUID, ((Villager)(Object)this), cleanMessage1).send(player);
+								
+								// Delayed response from the target villager
+								Thread responseThread = new Thread(() -> {
+									try {
+										Thread.sleep(1250);
+									} catch (InterruptedException e) {}
+									level.getServer().execute(() -> {
+										if (target.isAlive() && player.isAlive() && target.level() == player.level() && target.distanceToSqr(player) < 256.0) {
+											Component cleanMessage2 = Component.literal(reactionLine);
+											Component formatMessage2 = targetVillager.fromVillager(cleanMessage2);
+											new ClientboundVillagerMessagePacket(formatMessage2, playerUUID, target, cleanMessage2).send(player);
+										}
+									});
+								});
+								responseThread.setDaemon(true);
+								responseThread.start();
+								
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Inject(method = "restock", at = @At("HEAD"), cancellable = true)

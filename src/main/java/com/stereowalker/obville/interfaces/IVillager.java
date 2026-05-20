@@ -23,9 +23,13 @@ public interface IVillager<T extends PathfinderMob> {
 	public Map<UUID, Tuple<Law, Integer>> recentlyWitnessedCrime();
 	public Map<UUID, Integer> recentlyTakenBribe();
 	public void witnessCrime(Player player, Crime crime);
+	public Map<UUID, Integer> obville$getBlacklisted();
+	public List<UUID> obville$getUntrustworthy();
 	public int invisibleLineCooldown();
 	public void setInvisibleLineCooldown(int v);
 	public Map<UUID, Integer> crimesWitnessed();
+	public int obville$getPhysicalGossipCooldown();
+	public void obville$setPhysicalGossipCooldown(int cooldown);
 	
 	public T me();
 	
