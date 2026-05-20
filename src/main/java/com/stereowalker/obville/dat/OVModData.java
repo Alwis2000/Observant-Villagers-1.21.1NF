@@ -322,9 +322,27 @@ public class OVModData extends BaseData {
 			this.reputation.put(currentVillage, rep);
 	}
 
+	public void setReputation(int village, int rep) {
+		if (village >= 0)
+			this.reputation.put(village, rep);
+	}
+
+	public void clearReputation() {
+		this.reputation.clear();
+		this.crimesCommited.clear();
+		this.repu.clear();
+		this.cropsBrokenWarning = 0;
+		this.committedBanditry = 0;
+	}
+
 	public void incrementReputation(int rep) {
 		if (currentVillage >= 0)
 			this.reputation.put(currentVillage, this.reputation.getOrDefault(currentVillage, 0)+rep);
+	}
+
+	public void incrementReputation(int village, int rep) {
+		if (village >= 0)
+			this.reputation.put(village, this.reputation.getOrDefault(village, 0)+rep);
 	}
 
 	public void setInVillage(int current) {

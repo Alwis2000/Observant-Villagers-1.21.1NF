@@ -160,6 +160,8 @@ dependencies {
     // Villager Names compat
     implementation "curse.maven:villager-names-345854:8021602"
     implementation "curse.maven:collective-342584:8021351"
+
+    implementation "curse.maven:lithium-360438:7740400"
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.

@@ -45,6 +45,15 @@ public class ModConfig implements ConfigObject {
 	@UnionConfig.Comment(comment = {"Should the player's reputation reset after they die?"})
 	public boolean reset_reputation_on_death = false;
 	
+	@UnionConfig.Entry(name = "Prevent Trading Halls", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"Prevent trading with villagers who are confined to tiny cells / trading halls"})
+	public boolean prevent_trading_halls = true;
+	
+	@UnionConfig.Entry(name = "Trading Hall Space Threshold", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"The minimum number of reachable walkable floor blocks a villager needs to be willing to trade"})
+	@UnionConfig.Range(min = 1.0D, max = 100.0D)
+	public int trading_hall_space_threshold = 6;
+	
 	@UnionConfig.Entry(name = "Global Reputation", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"Should the player's reputation be restricted to a single village or should it affect all villages.","Changing this will make your reputation what it was before this was changed.",
 			"If you were exiled when it was global and you made it local to each village, changing this back will make you exiled globally and vice versa"})

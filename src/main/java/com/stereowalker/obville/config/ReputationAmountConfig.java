@@ -12,6 +12,15 @@ public class ReputationAmountConfig implements ConfigObject {
 	@UnionConfig.Comment(comment = {"How much reputation is gained or lost for defending the village in a raid"})
 	public int raid_defence = 5;
 
+	@UnionConfig.Entry(name = "Saving Villagers", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"How much reputation is gained or lost for killing a monster that is chasing a villager"})
+	public int saving_villager = 2;
+
+	@UnionConfig.Entry(name = "Saving Villagers Max Distance", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"The maximum distance (in blocks) the monster can be from the villager it is chasing for the kill to count as saving them"})
+	@UnionConfig.Range(min = 1.0D, max = 128.0D)
+	public double saving_villager_max_distance = 16.0;
+
 	@UnionConfig.Entry(name = "Bounties", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"How much reputation is gained or lost for completing a bounty"})
 	public int bounty = 5;

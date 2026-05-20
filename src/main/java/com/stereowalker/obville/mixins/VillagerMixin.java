@@ -232,6 +232,16 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 	@Inject(method = "mobInteract", at = @At("HEAD"), cancellable = true)
 	public void mobInteractInject(Player pPlayer, InteractionHand pHand, CallbackInfoReturnable<InteractionResult> cir) {
 		Villager villager = (Villager) (Object) this;
+		if (ObVille.isImprisoned(villager)) {
+			if (!villager.level().isClientSide()) {
+				setUnhappy();
+				villager.level().broadcastEntityEvent(villager, (byte)13);
+				String msg = villager.getName().getString() + " refuses to trade while imprisoned!";
+				pPlayer.sendSystemMessage(net.minecraft.network.chat.Component.literal(msg).withStyle(net.minecraft.ChatFormatting.RED));
+			}
+			cir.setReturnValue(InteractionResult.sidedSuccess(villager.level().isClientSide()));
+			return;
+		}
 		if (!villager.isBaby()) {
 			IModdedEntity modded = (IModdedEntity)pPlayer;
 			switch (acceptBribe(pPlayer, pPlayer.getItemInHand(pHand), villager.getRandom())) {
@@ -451,5 +461,13 @@ public abstract class VillagerMixin implements VillagerDataHolder, IVillager<Vil
 	@Override
 	public Villager me() {
 		return (Villager)(Object)this;
+	}
+
+	@Inject(method = "restock", at = @At("HEAD"), cancellable = true)
+	public void restockInject(CallbackInfo ci) {
+		Villager villager = (Villager) (Object) this;
+		if (ObVille.isImprisoned(villager)) {
+			ci.cancel();
+		}
 	}
 }

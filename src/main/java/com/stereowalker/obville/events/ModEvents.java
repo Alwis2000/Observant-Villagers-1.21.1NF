@@ -22,6 +22,8 @@ import com.stereowalker.obville.interfaces.ISheep;
 import com.stereowalker.obville.network.protocol.game.ClientboundNBTPacket;
 import com.stereowalker.obville.world.PlacedBlocks;
 import com.stereowalker.obville.world.entity.VillageLeader;
+import com.stereowalker.obville.ObVilleCommands;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -99,6 +101,21 @@ public class ModEvents {
 						ent.getData().reputAtNoSave(village).droppedBounty = true;
 					}
 				});
+			}
+			else if (event.getEntity() instanceof net.minecraft.world.entity.Mob mob) {
+				net.minecraft.world.entity.LivingEntity target = mob.getTarget();
+				if (target instanceof Villager villager && !(ObVille.hasGuardVillagers() && GuardVillagersCompat.isGuard(target))) {
+					double maxDist = ObVille.REPUTATION_CONFIG.saving_villager_max_distance;
+					if (mob.distanceToSqr(villager) <= maxDist * maxDist) {
+						ServerLevel level = (ServerLevel) mob.level();
+						int villageId = ObVille.determineVillage(level, villager.blockPosition());
+						if (villageId >= 0) {
+							((IModdedEntity) spl).getData().incrementReputation(villageId, ObVille.REPUTATION_CONFIG.saving_villager);
+							spl.sendSystemMessage(net.minecraft.network.chat.Component.literal("You saved a villager! Reputation increased.")
+									.withStyle(net.minecraft.ChatFormatting.GREEN));
+						}
+					}
+				}
 			}
 		}
 	}
@@ -511,6 +528,4 @@ public class ModEvents {
 		if (!event.isWasDeath()) {
 		}
 	}
-
-
 }

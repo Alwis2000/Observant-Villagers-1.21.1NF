@@ -16,6 +16,7 @@ import com.stereowalker.obville.interfaces.IPlayerFollower;
 import com.stereowalker.obville.interfaces.IVillager;
 import com.stereowalker.obville.world.entity.ai.goal.FollowCriminalGoal;
 import com.stereowalker.obville.world.entity.ai.goal.InvestigateCrimeGoal;
+import com.stereowalker.obville.world.entity.ai.goal.StareAtDistrustedPlayerGoal;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -68,6 +69,7 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 		Guard guard = (Guard) (Object) this;
 		guard.goalSelector.addGoal(3, new FollowCriminalGoal(guard, 1D));
 		guard.goalSelector.addGoal(0, new InvestigateCrimeGoal(guard, .5D));
+		guard.goalSelector.addGoal(4, new StareAtDistrustedPlayerGoal(guard, 10.0F));
 	}
 	
 	@Inject(method = "tick", at = @At("HEAD"))

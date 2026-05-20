@@ -23,6 +23,7 @@
 		"RandomizableMixin",
 		"VillagerMixin",
 		"DefendVillageTargetGoalGolemMixin",
+		"IronGolemMixin",
 		"guard.DefendVillageTargetGoalGuardMixin",
 		"guard.GuardMixin",
 		"VillagerTalkBalloonsMixin",

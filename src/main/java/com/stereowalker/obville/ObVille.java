@@ -60,6 +60,10 @@ import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.level.block.entity.RandomizableContainerBlockEntity;
 import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.Level;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
@@ -128,6 +132,7 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 			modEventBus.addListener(GuiHelper::registerOverlays);
 		}
 		modEventBus.addListener(this::registerAttributes);
+		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ObVilleCommands::onRegisterCommands);
 
 		Laws.bootstrap();
 	}
@@ -355,6 +360,75 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 
 	public static ObVille getInstance() {
 		return instance;
+	}
+
+	public static boolean isImprisoned(Villager villager) {
+		if (!MOD_CONFIG.prevent_trading_halls) return false;
+		
+		Level level = villager.level();
+		BlockPos start = villager.blockPosition();
+		java.util.Set<BlockPos> visited = new java.util.HashSet<>();
+		java.util.Queue<BlockPos> queue = new java.util.LinkedList<>();
+		
+		queue.add(start);
+		visited.add(start);
+		
+		int walkableFloorBlocks = 0;
+		int threshold = MOD_CONFIG.trading_hall_space_threshold;
+		
+		while (!queue.isEmpty() && visited.size() < 50) {
+			BlockPos current = queue.poll();
+			
+			if (isPassable(level, current) && isPassable(level, current.above())) {
+				if (!level.getBlockState(current.below()).getCollisionShape(level, current.below()).isEmpty()) {
+					walkableFloorBlocks++;
+					if (walkableFloorBlocks >= threshold) {
+						return false;
+					}
+				}
+			}
+			
+			for (Direction dir : Direction.values()) {
+				if (dir == Direction.UP || dir == Direction.DOWN) continue;
+				
+				for (int dy = -1; dy <= 1; dy++) {
+					BlockPos neighbor = current.relative(dir).above(dy);
+					if (!visited.contains(neighbor)) {
+						if (canPassBetween(level, current, neighbor)) {
+							visited.add(neighbor);
+							queue.add(neighbor);
+						}
+					}
+				}
+			}
+		}
+		
+		return walkableFloorBlocks < threshold;
+	}
+
+	private static boolean isPassable(Level level, BlockPos pos) {
+		BlockState state = level.getBlockState(pos);
+		if (state.isAir()) {
+			return true;
+		}
+		if (state.is(BlockTags.WOODEN_DOORS) ||
+			state.is(BlockTags.WOODEN_TRAPDOORS) ||
+			state.getBlock() instanceof net.minecraft.world.level.block.FenceGateBlock) {
+			return true;
+		}
+		return state.getCollisionShape(level, pos).isEmpty();
+	}
+
+	private static boolean canPassBetween(Level level, BlockPos from, BlockPos to) {
+		int dy = to.getY() - from.getY();
+		if (dy == 0) {
+			return isPassable(level, to) && isPassable(level, to.above());
+		} else if (dy == 1) {
+			return isPassable(level, from.above().above()) && isPassable(level, to) && isPassable(level, to.above());
+		} else if (dy == -1) {
+			return isPassable(level, to) && isPassable(level, to.above());
+		}
+		return false;
 	}
 
 	private void registerAttributes(net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent event) {

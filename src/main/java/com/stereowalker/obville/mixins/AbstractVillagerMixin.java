@@ -34,6 +34,14 @@ public abstract class AbstractVillagerMixin {
 				return data.IsExiled() || data.recentlyCommitedBandirty();
 			}
 		}, 7.0F, 1.0D, 1D, EntitySelector.NO_CREATIVE_OR_SPECTATOR::test));
+		villager.goalSelector.addGoal(4, new AvoidEntityGoal<>(villager, Player.class, (p_200828_0_) -> {
+			if (villager instanceof VillageLeader)
+				return false;
+			else {
+				OVModData data = ((IModdedEntity)p_200828_0_).getData();
+				return data.IsDistrusted();
+			}
+		}, 7.0F, 0.5D, 0.5D, EntitySelector.NO_CREATIVE_OR_SPECTATOR::test));
 	}
 
 }
