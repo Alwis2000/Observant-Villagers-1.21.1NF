@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -22,13 +21,12 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import tallestegg.guardvillagers.common.entities.Guard;
 
 @Mixin(Guard.class)
 public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, IInvestigator {
-	
+
 	Map<UUID, Integer> crimesWitnessed = new HashMap<>();
 	public BlockPos investigatePos = BlockPos.ZERO;
 	public Crime crimeToInvestigate;
@@ -58,7 +56,7 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 		pCompound.putInt("InvY", investigatePos.getY());
 		pCompound.putInt("InvZ", investigatePos.getZ());
 	}
-	
+
 	@Override
 	public Map<UUID, Integer> crimesWitnessed() {
 		return crimesWitnessed;
@@ -71,7 +69,7 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 		guard.goalSelector.addGoal(0, new InvestigateCrimeGoal(guard, .5D));
 		guard.goalSelector.addGoal(4, new StareAtDistrustedPlayerGoal(guard, 10.0F));
 	}
-	
+
 	@Inject(method = "tick", at = @At("HEAD"))
 	public void t(CallbackInfo ci) {
 		Guard guard = (Guard) (Object) this;
@@ -86,22 +84,22 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 
 	public Player followedCriminal = null;
 	public int followedtime = 0;
-	
+
 	@Override
 	public Player followedCriminal() {
 		return followedCriminal;
 	}
-	
+
 	@Override
 	public int followedtime() {
 		return followedtime;
 	}
-	
+
 	@Override
 	public void setFollowedCriminal(Player player) {
 		followedCriminal = player;
 	}
-	
+
 	@Override
 	public void setFollowedtime(int time) {
 		followedtime = time;
@@ -109,7 +107,7 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 
 	@Override
 	public Guard me() {
-		return (Guard)(Object)this;
+		return (Guard) (Object) this;
 	}
 
 	@Override

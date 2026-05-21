@@ -3,7 +3,6 @@ package com.stereowalker.obville.network.protocol.game;
 import java.util.UUID;
 import com.stereowalker.obville.sounds.ModSounds;
 import com.stereowalker.unionlib.network.protocol.game.ClientboundUnionPacket;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -37,7 +36,9 @@ public class ClientboundSoundPacket extends ClientboundUnionPacket {
 	@Override
 	public boolean handleOnClient(LocalPlayer player) {
 		if (uuid.equals(player.getUUID())) {
-			player.level().playLocalSound(player.getX(), player.getY(), player.getZ(), positive ? ModSounds.POSITIVE.value().get() : ModSounds.NEGATIVE.value().get(), SoundSource.PLAYERS, 1, 1, false);
+			player.level().playLocalSound(player.getX(), player.getY(), player.getZ(),
+					positive ? ModSounds.POSITIVE.value().get() : ModSounds.NEGATIVE.value().get(), SoundSource.PLAYERS,
+					1, 1, false);
 		}
 		return true;
 	}

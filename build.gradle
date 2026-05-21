@@ -157,6 +157,8 @@ dependencies {
     implementation "curse.maven:modernnetworking-1251794:7398398"
     implementation "curse.maven:kotlinlangforge-1244682:8075658"
 
+    compileOnly "curse.maven:nbt-938890:6307058"
+
     // Villager Names compat
     implementation "curse.maven:villager-names-345854:8021602"
     implementation "curse.maven:collective-342584:8021351"

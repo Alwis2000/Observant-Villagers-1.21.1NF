@@ -54,11 +54,16 @@ public class ClientboundVillagerMessagePacket extends ClientboundUnionPacket {
 	public boolean handleOnClient(LocalPlayer player) {
 		if (uuid.equals(player.getUUID())) {
 			boolean shownInBalloon = false;
-			if (villagerEntityId != -1 && player.level() != null && net.neoforged.fml.ModList.get().isLoaded("talk_balloons")) {
+			if (villagerEntityId != -1 && player.level() != null) {
 				Entity entity = player.level().getEntity(villagerEntityId);
 				if (entity != null) {
-					com.stereowalker.obville.compat.TalkBalloonsCompat.createBalloon(entity, cleanMessage);
-					shownInBalloon = true;
+					if (net.neoforged.fml.ModList.get().isLoaded("nbt")) {
+						com.stereowalker.obville.compat.NotableBubbleTextCompat.createBubble(entity, cleanMessage, player.level().getGameTime());
+						shownInBalloon = true;
+					} else if (net.neoforged.fml.ModList.get().isLoaded("talk_balloons")) {
+						com.stereowalker.obville.compat.TalkBalloonsCompat.createBalloon(entity, cleanMessage);
+						shownInBalloon = true;
+					}
 				}
 			}
 			if (!shownInBalloon) {

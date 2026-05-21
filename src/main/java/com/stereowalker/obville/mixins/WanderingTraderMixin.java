@@ -33,7 +33,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.trading.MerchantOffer;
 
 @Mixin(WanderingTrader.class)
-public abstract class WanderingTraderMixin implements com.cerbon.talk_balloons.util.mixin.ITalkBalloonsPlayer, com.stereowalker.obville.interfaces.IWanderingTrader {
+public abstract class WanderingTraderMixin implements com.stereowalker.obville.interfaces.IWanderingTrader {
 
 	@Unique
 	private final Map<UUID, Integer> obville$rumoredReputations = new HashMap<>();
@@ -41,53 +41,10 @@ public abstract class WanderingTraderMixin implements com.cerbon.talk_balloons.u
 	@Unique
 	private int obville$gossipCooldown = 0;
 
-	@Unique
-	private com.cerbon.talk_balloons.util.HistoricalData<Component> talk_balloons$balloonMessages;
-
-	@Unique
-	private final java.util.Collection<java.util.function.Supplier<Boolean>> talk_balloons$queuedTickEvents = new java.util.concurrent.ConcurrentLinkedDeque<>();
-
-	@Unique
-	private void talk_balloons$tryInitHistoricalData() {
-		if (this.talk_balloons$balloonMessages == null) {
-			this.talk_balloons$balloonMessages = new com.cerbon.talk_balloons.util.HistoricalData<>(com.cerbon.talk_balloons.TalkBalloons.config.maxBalloons);
-		}
-	}
-
-	@Override
-	public void talk_balloons$createBalloonMessage(Component text, int timeToRemove) {
-		this.talk_balloons$tryInitHistoricalData();
-		com.cerbon.talk_balloons.util.HistoricalData<Component> messages = this.talk_balloons$getBalloonMessages();
-		java.util.concurrent.atomic.AtomicInteger currentTick = new java.util.concurrent.atomic.AtomicInteger(0);
-		this.talk_balloons$queuedTickEvents.add(() -> {
-			if (currentTick.getAndIncrement() >= timeToRemove) {
-				messages.remove(text);
-				return true;
-			}
-			return false;
-		});
-		messages.add(text);
-	}
-
-	@Override
-	public com.cerbon.talk_balloons.util.HistoricalData<Component> talk_balloons$getBalloonMessages() {
-		this.talk_balloons$tryInitHistoricalData();
-		return this.talk_balloons$balloonMessages;
-	}
-
 	@Override
 	public void obville$tickTrader() {
 		WanderingTrader trader = (WanderingTrader) (Object) this;
 		if (trader.level().isClientSide()) {
-			java.util.HashSet<java.util.function.Supplier<Boolean>> eventsToRemove = new java.util.HashSet<>();
-			for (java.util.function.Supplier<Boolean> event : this.talk_balloons$queuedTickEvents) {
-				if (event.get()) {
-					eventsToRemove.add(event);
-				}
-			}
-			if (!eventsToRemove.isEmpty()) {
-				this.talk_balloons$queuedTickEvents.removeAll(eventsToRemove);
-			}
 			return;
 		}
 

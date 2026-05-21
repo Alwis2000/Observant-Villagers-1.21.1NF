@@ -34,6 +34,10 @@ public class ObvilleMixinPlugin implements IMixinConfigPlugin {
             return hasTalk;
         }
 
+        if (mixinClassName.contains("WanderingTraderTalkBalloonsMixin")) {
+            return hasTalk;
+        }
+
         if (mixinClassName.contains("client.LivingEntityRendererMixin")) {
             return hasTalk;
         }

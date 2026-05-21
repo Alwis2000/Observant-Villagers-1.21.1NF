@@ -29,6 +29,7 @@
 		"VillagerTalkBalloonsMixin",
 		"guard.GuardTalkBalloonsMixin",
 		"WanderingTraderMixin",
+		"WanderingTraderTalkBalloonsMixin",
 		"LivingEntityMixin"
 	],
 	"client": [

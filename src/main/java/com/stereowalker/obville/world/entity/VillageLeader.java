@@ -1,7 +1,6 @@
 package com.stereowalker.obville.world.entity;
 
 import java.util.Map;
-import java.util.Optional;
 
 import com.google.common.collect.Maps;
 import com.stereowalker.obville.Crime;
@@ -44,7 +43,8 @@ import net.minecraft.world.item.trading.MerchantOffers;
 import net.minecraft.world.level.Level;
 
 public class VillageLeader extends Villager implements IPlayerFollower, IInvestigator {
-	private static final EntityDataAccessor<Integer> DATA_ID_TYPE = SynchedEntityData.defineId(VillageLeader.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Integer> DATA_ID_TYPE = SynchedEntityData.defineId(VillageLeader.class,
+			EntityDataSerializers.INT);
 	int redemptionTradesPerformed = 0;
 	public Player followedCriminal = null;
 	public int followedtime = 0;
@@ -98,24 +98,26 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	}
 
 	boolean hasSpokenOnContact = false;
+
 	@Override
 	protected void customServerAiStep() {
-		currentVillage = ObVille.determineVillage((ServerLevel)this.level(), this.blockPosition());
+		currentVillage = ObVille.determineVillage((ServerLevel) this.level(), this.blockPosition());
 
 		if (getHatType() == 0)
 			this.entityData.set(DATA_ID_TYPE, random.nextInt(1, 4));
 		this.level().getProfiler().push("villagerBrain");
-		this.getBrain().tick((ServerLevel)this.level(), this);
+		this.getBrain().tick((ServerLevel) this.level(), this);
 		this.level().getProfiler().pop();
 
 		if (!this.isNoAi() && this.random.nextInt(100) == 0) {
-			Raid raid = ((ServerLevel)this.level()).getRaidAt(this.blockPosition());
+			Raid raid = ((ServerLevel) this.level()).getRaidAt(this.blockPosition());
 			if (raid != null && raid.isActive() && !raid.isOver()) {
-				this.level().broadcastEntityEvent(this, (byte)42);
+				this.level().broadcastEntityEvent(this, (byte) 42);
 			}
 		}
 
-		if (followedCriminal == null) hasSpokenOnContact = false;
+		if (followedCriminal == null)
+			hasSpokenOnContact = false;
 
 		if (followedCriminal != null && distanceTo(followedCriminal) <= 4f && !hasSpokenOnContact) {
 			followedtime = 0;
@@ -124,7 +126,8 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 			Component message = cleanMessage;
 			if (hasCustomName())
 				message = getCustomName().copy().append(": ").append(cleanMessage);
-			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage).send((ServerPlayer)followedCriminal);
+			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage)
+					.send((ServerPlayer) followedCriminal);
 		}
 		if (followedtime >= 300 && followedCriminal != null) {
 			followedtime = 0;
@@ -132,7 +135,8 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 			Component message = cleanMessage;
 			if (hasCustomName())
 				message = getCustomName().copy().append(": ").append(cleanMessage);
-			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage).send((ServerPlayer)followedCriminal);
+			new ClientboundVillagerMessagePacket(message, followedCriminal.getUUID(), this, cleanMessage)
+					.send((ServerPlayer) followedCriminal);
 		}
 	}
 
@@ -140,14 +144,17 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	public InteractionResult mobInteract(Player pPlayer, InteractionHand pHand) {
 		ItemStack itemstack = pPlayer.getItemInHand(pHand);
 
-		if (currentVillage >= 0 && itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive() && !this.isTrading() && !this.isSleeping() && !pPlayer.isSecondaryUseActive()) {
+		if (currentVillage >= 0 && itemstack.getItem() != Items.VILLAGER_SPAWN_EGG && this.isAlive()
+				&& !this.isTrading() && !this.isSleeping() && !pPlayer.isSecondaryUseActive()) {
 			boolean flag = true;
 			if (pPlayer instanceof ServerPlayer serv) {
-				OVModData data = ((IModdedEntity)serv).getData();
+				OVModData data = ((IModdedEntity) serv).getData();
 				flag = data.IsWelcome() || data.IsNeutral();
 
-				if (data.crimesCommitedAt(currentVillage).size() > 0) flag = false;
-				if (data.reputAtNoSave(currentVillage).hasSpokenToLeader) flag = false;
+				if (data.crimesCommitedAt(currentVillage).size() > 0)
+					flag = false;
+				if (data.reputAtNoSave(currentVillage).hasSpokenToLeader)
+					flag = false;
 			}
 			if (pHand == InteractionHand.MAIN_HAND) {
 				if (flag && !this.level().isClientSide) {
@@ -159,14 +166,13 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 			if (pPlayer instanceof ServerPlayer serv) {
 				if (ObVille.isPotentialBandit(serv)) {
 					Component cleanMessage = Component.translatable("obville.chat.no_bandits");
-					new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), this, cleanMessage).send((ServerPlayer)pPlayer);
+					new ClientboundVillagerMessagePacket(fromVillager(cleanMessage), pPlayer.getUUID(), this,
+							cleanMessage).send((ServerPlayer) pPlayer);
 					return InteractionResult.sidedSuccess(this.level().isClientSide);
-				}
-				else if (flag) {
+				} else if (flag) {
 					pPlayer.displayClientMessage(Component.translatable("obville.messages.not_now"), true);
 					return InteractionResult.sidedSuccess(this.level().isClientSide);
-				} 
-				else {
+				} else {
 					this.startTrading(pPlayer);
 					return InteractionResult.sidedSuccess(this.level().isClientSide);
 				}
@@ -179,19 +185,22 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 
 	@SuppressWarnings("unchecked")
 	public Brain<VillageLeader> getBrainC() {
-		return (Brain<VillageLeader>)((LivingEntity)this).getBrain();
+		return (Brain<VillageLeader>) ((LivingEntity) this).getBrain();
 	}
 
 	@Override
 	public void setTradingPlayer(Player pPlayer) {
-		if (pPlayer != null && !this.level().isClientSide && redemptionTradesPerformed > 0 && getTradingPlayer() != null && pPlayer == null) {
-			Component cleanMessage = Component.literal(ObVille.LINES_CONFIG.leader_lines.get(random.nextInt(ObVille.LINES_CONFIG.leader_lines.size())));
+		if (pPlayer != null && !this.level().isClientSide && redemptionTradesPerformed > 0 && getTradingPlayer() != null
+				&& pPlayer == null) {
+			Component cleanMessage = Component.literal(
+					ObVille.LINES_CONFIG.leader_lines.get(random.nextInt(ObVille.LINES_CONFIG.leader_lines.size())));
 			Component message = cleanMessage;
 			if (getTags().contains("villagernames.named"))
 				message = getCustomName().copy().append(": ").append(cleanMessage);
 			else
 				message = getTypeName().copy().append(": ").append(cleanMessage);
-			new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage).send((ServerPlayer)getTradingPlayer());
+			new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage)
+					.send((ServerPlayer) getTradingPlayer());
 			redemptionTradesPerformed = 0;
 		}
 		super.setTradingPlayer(pPlayer);
@@ -200,9 +209,9 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	private void startTrading(Player pPlayer) {
 		Component title = Component.literal("Redemption Trades");
 		if (pPlayer != null) {
-			OVModData data = ((IModdedEntity)pPlayer).getData();
+			OVModData data = ((IModdedEntity) pPlayer).getData();
 			data.reputAtNoSave(currentVillage).hasSpokenToLeader = true;
-			title = Component.literal("Redemption Trades ("+data.getReputation()+")");
+			title = Component.literal("Redemption Trades (" + data.getReputation() + ")");
 		}
 		if (ObVille.hasVillagerNames()) {
 			VillagerNamesCompat.overrideMerchantScreen(title, this);
@@ -229,26 +238,28 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	public MerchantOffers getOffers() {
 		MerchantOffers offers = new MerchantOffers();
 		if (getTradingPlayer() != null && currentVillage >= 0) {
-			OVModData data = ((IModdedEntity)getTradingPlayer()).getData();
+			OVModData data = ((IModdedEntity) getTradingPlayer()).getData();
 			int repleftToRecover = data.getReputation();
 			if (repleftToRecover < 0) {
 				Map<Law, MerchantOffer> offers2 = Maps.newHashMap();
 				for (int i = 0; i < data.crimesCommitedAt(currentVillage).size(); i++) {
 					Crime crime = data.crimesCommitedAt(currentVillage).get(i);
 					if (!offers2.containsKey(crime.lawBroken)) {
-						repleftToRecover -= crime.lawBroken.getRepHit() * data.crimesCommitedOfType(currentVillage, crime.lawBroken);
+						repleftToRecover -= crime.lawBroken.getRepHit()
+								* data.crimesCommitedOfType(currentVillage, crime.lawBroken);
 						offers2.put(crime.lawBroken, crime.frogive(data, currentVillage));
 					}
 				}
 				offers2.values().forEach(offers::add);
 				if (repleftToRecover < 0) {
-					offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 40), 
+					offers.add(new MerchantOffer(new ItemCost(Items.EMERALD, 40),
 							Crime.forgive(1, "generic", currentVillage), -repleftToRecover, 0, 1.0F));
 				}
 				if (this.level() instanceof ServerLevel server) {
 					PlacedBlocks pb = PlacedBlocks.getInstance(server);
 					for (ItemStack stack : pb.villages.get(currentVillage).generatedBounties) {
-						offers.add(new MerchantOffer(new ItemCost(stack.getItem(), stack.getCount()), new ItemStack(Items.EMERALD, 20), 1, 0, 1.0F));
+						offers.add(new MerchantOffer(new ItemCost(stack.getItem(), stack.getCount()),
+								new ItemStack(Items.EMERALD, 20), 1, 0, 1.0F));
 					}
 				}
 			}
@@ -265,12 +276,14 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 	@Override
 	public void notifyTrade(MerchantOffer pOffer) {
 		redemptionTradesPerformed++;
-		System.out.println((getTradingPlayer() != null)+" is?"+redemptionTradesPerformed+" "+pOffer.getMaxUses());
+		System.out
+				.println((getTradingPlayer() != null) + " is?" + redemptionTradesPerformed + " " + pOffer.getMaxUses());
 		ItemStack stack = pOffer.getResult();
 		if (getTradingPlayer() != null) {
-			OVModData data = ((IModdedEntity)getTradingPlayer()).getData();
+			OVModData data = ((IModdedEntity) getTradingPlayer()).getData();
 			if (stack.getItem() == Items.PAPER) {
-				net.minecraft.world.item.component.CustomData customData = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+				net.minecraft.world.item.component.CustomData customData = stack
+						.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
 				if (customData != null && customData.copyTag().contains("obville:to_forgive")) {
 					CompoundTag tag = customData.copyTag().getCompound("obville:to_forgive");
 					if (!tag.getString("forWhat").equals("generic")) {
@@ -278,7 +291,7 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 					}
 					data.incrementReputation(tag.getInt("amount"));
 					if (getTradingPlayer() instanceof ServerPlayer)
-						VillageData.invalidateGounty((ServerPlayer)getTradingPlayer());
+						VillageData.invalidateGounty((ServerPlayer) getTradingPlayer());
 					stack.setCount(0);
 				}
 			}
@@ -287,13 +300,15 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 					PlacedBlocks pb = PlacedBlocks.getInstance(server);
 					pb.villages.get(currentVillage).generatedBounties.remove(pOffer.getCostA());
 					data.incrementReputation(ObVille.REPUTATION_CONFIG.bounty);
-					Component cleanMessage = Component.literal(ObVille.LINES_CONFIG.bounty.get(random.nextInt(ObVille.LINES_CONFIG.bounty.size())));
+					Component cleanMessage = Component.literal(
+							ObVille.LINES_CONFIG.bounty.get(random.nextInt(ObVille.LINES_CONFIG.bounty.size())));
 					Component message = cleanMessage;
 					if (getTags().contains("villagernames.named"))
 						message = getCustomName().copy().append(": ").append(cleanMessage);
 					else
 						message = getTypeName().copy().append(": ").append(cleanMessage);
-					new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage).send((ServerPlayer)getTradingPlayer());
+					new ClientboundVillagerMessagePacket(message, getTradingPlayer().getUUID(), this, cleanMessage)
+							.send((ServerPlayer) getTradingPlayer());
 				}
 			}
 		}
