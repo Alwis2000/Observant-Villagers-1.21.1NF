@@ -152,9 +152,7 @@ dependencies {
     implementation "curse.maven:lithostitched-936015:8101993"
 
     //Talk Balloons compat
-    implementation "curse.maven:talk-balloons-992601:7362312"
-    implementation "curse.maven:cloth-config-348521:5729127"
-    implementation "curse.maven:modernnetworking-1251794:7398398"
+    implementation "curse.maven:talk-balloons-992601:8130426"
     implementation "curse.maven:kotlinlangforge-1244682:8075658"
 
     compileOnly "curse.maven:nbt-938890:6307058"

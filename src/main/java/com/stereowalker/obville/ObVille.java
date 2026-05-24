@@ -133,8 +133,17 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 		}
 		modEventBus.addListener(this::registerAttributes);
 		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ObVilleCommands::onRegisterCommands);
+		net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(ObVille::onLivingTick);
 
 		Laws.bootstrap();
+	}
+
+	public static void onLivingTick(net.neoforged.neoforge.event.tick.EntityTickEvent.Post event) {
+		if (event.getEntity() instanceof net.minecraft.world.entity.decoration.ArmorStand armorStand && armorStand.getTags().contains("ObVilleSandboxSeat")) {
+			if (!armorStand.isVehicle()) {
+				armorStand.discard();
+			}
+		}
 	}
 
 	@Override
@@ -251,25 +260,80 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 
 					return false;
 				} else {
+					// Separate regular villagers from authorities
+					List<Villager> regularVillagers = new ArrayList<>();
+					List<Villager> authorityVillagers = new ArrayList<>();
+					for (Villager vEntity : vills) {
+						if (vEntity instanceof VillageLeader) {
+							authorityVillagers.add(vEntity);
+						} else {
+							regularVillagers.add(vEntity);
+						}
+					}
+					
+					// Guards who see it react immediately
 					if (guardians.size() >= 1) {
 						if (hasGuardVillagers()) {
 							GuardVillagersCompat.wit(player, guardians, crimeCommited);
 						}
 					}
-					if (vills.size() == 1) {
-						if (vills.get(0) instanceof IVillager && crimeCommited != null) {
-							IVillager<Villager> villager = (IVillager<Villager>)vills.get(0);
-							if (!villager.recentlyWitnessedCrime().containsKey(player.getUUID())) {
-								villager.witnessCrime(player, crimeCommited);
-								new ClientboundOverlayOverridePacket(player.getUUID()).send((ServerPlayer)player);
-								Villager villagEntity = vills.get(0);
-								String cleanLine = LINES_CONFIG.caught.get(villagEntity.getRandom().nextInt(LINES_CONFIG.caught.size()));
-								Component cleanMessage = Component.literal(cleanLine);
-								new ClientboundVillagerMessagePacket(villager.fromVillager(cleanMessage), player.getUUID(), villagEntity, cleanMessage).send((ServerPlayer)player);
+					
+					// VillageLeaders who see it react immediately
+					if (!authorityVillagers.isEmpty()) {
+						boolean firstWitnessSpoke = false;
+						for (Villager vEntity : authorityVillagers) {
+							if (vEntity instanceof IVillager && crimeCommited != null) {
+								IVillager<Villager> villager = (IVillager<Villager>)vEntity;
+								if (!villager.recentlyWitnessedCrime().containsKey(player.getUUID())) {
+									villager.witnessCrime(player, crimeCommited);
+									if (!firstWitnessSpoke) {
+										new ClientboundOverlayOverridePacket(player.getUUID()).send((ServerPlayer)player);
+										String cleanLine = LINES_CONFIG.caught.get(vEntity.getRandom().nextInt(LINES_CONFIG.caught.size()));
+										Component cleanMessage = Component.literal(cleanLine);
+										new ClientboundVillagerMessagePacket(villager.fromVillager(cleanMessage), player.getUUID(), vEntity, cleanMessage).send((ServerPlayer)player);
+										firstWitnessSpoke = true;
+									}
+								}
 							}
 						}
 					}
-
+					
+					// Regular villagers enter PANIC state instead of instant reaction
+					Law.Severity severity = (crimeCommited != null && crimeCommited.lawBroken != null) 
+						? crimeCommited.lawBroken.getSeverity() : Law.Severity.LOW;
+					
+					for (Villager vEntity : regularVillagers) {
+						if (vEntity instanceof IVillager && crimeCommited != null) {
+							IVillager<Villager> villager = (IVillager<Villager>)vEntity;
+							if (!villager.recentlyWitnessedCrime().containsKey(player.getUUID())) {
+								// Remember the crime (for bribery system)
+								villager.witnessCrime(player, crimeCommited);
+								// Enter panic state — the ReportCrimeGoal AI will take over
+								villager.setPanicking(true);
+								villager.setCrimeToReport(crimeCommited);
+								villager.setCriminal(player);
+								// Panic target will be found by ReportCrimeGoal.start()
+							}
+						}
+					}
+					
+					// HIGH severity: spread panic to ALL nearby villagers (even those who didn't see)
+					if (severity == Law.Severity.HIGH) {
+						List<Villager> allNearby = player.level().getEntitiesOfClass(Villager.class, player.getBoundingBox().inflate(32.0));
+						for (Villager vEntity : allNearby) {
+							if (vEntity instanceof VillageLeader) continue;
+							if (vEntity instanceof IVillager) {
+								IVillager<Villager> villager = (IVillager<Villager>)vEntity;
+								if (!villager.isPanicking() && crimeCommited != null) {
+									villager.setPanicking(true);
+									villager.setCrimeToReport(crimeCommited);
+									villager.setCriminal(player);
+								}
+							}
+						}
+					}
+					
+					// For non-pardonable crimes, guards/golems still attack immediately
 					if (crimeCommited != null && !crimeCommited.lawBroken.isPardonable()) {
 						b.forEach(liv -> {
 							if (hasGuardVillagers()) {
@@ -277,8 +341,11 @@ public class ObVille extends MinecraftMod implements PacketHolder {
 							}
 						});
 					}
-
-
+					
+					// Apply reputation + crime recording
+					// For authority-witnessed crimes: immediate
+					// For villager-only witnessed crimes: still apply (they saw it, rep hit happens)
+					// The PANIC system delays the guard/leader RESPONSE, not the reputation consequence
 					OVModData modEn = ((IModdedEntity)player).getData();
 					modEn.incrementReputation(crime != null ? 
 							crimeCommited.lawBroken.getRepHit() : -amount);

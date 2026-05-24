@@ -129,4 +129,22 @@ public abstract class GuardMixin implements IVillager<Guard>, IPlayerFollower, I
 	public void crimeToInvestigate(Crime crime) {
 		this.crimeToInvestigate = crime;
 	}
+
+	// Guards are authorities — they never panic, they receive reports
+	@Override
+	public boolean isPanicking() { return false; }
+	@Override
+	public void setPanicking(boolean panicking) {}
+	@Override
+	public net.minecraft.world.entity.LivingEntity getPanicTarget() { return null; }
+	@Override
+	public void setPanicTarget(net.minecraft.world.entity.LivingEntity target) {}
+	@Override
+	public Crime getCrimeToReport() { return null; }
+	@Override
+	public void setCrimeToReport(Crime crime) {}
+	@Override
+	public net.minecraft.world.entity.player.Player getCriminal() { return null; }
+	@Override
+	public void setCriminal(net.minecraft.world.entity.player.Player player) {}
 }

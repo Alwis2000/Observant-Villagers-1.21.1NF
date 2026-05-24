@@ -31,10 +31,20 @@ public interface IVillager<T extends PathfinderMob> {
 	public int obville$getPhysicalGossipCooldown();
 	public void obville$setPhysicalGossipCooldown(int cooldown);
 	
+	// Panic state
+	public boolean isPanicking();
+	public void setPanicking(boolean panicking);
+	public net.minecraft.world.entity.LivingEntity getPanicTarget();
+	public void setPanicTarget(net.minecraft.world.entity.LivingEntity target);
+	public Crime getCrimeToReport();
+	public void setCrimeToReport(Crime crime);
+	public Player getCriminal();
+	public void setCriminal(Player player);
+	
 	public T me();
 	
 	public default Component fromVillager(Component original) {
-		if (me().getTags().contains("villagernames.named"))
+		if (me().getTags().contains("villagernames.named") && me().getCustomName() != null)
 			return me().getCustomName().copy().append(": ").append(original);
 		else
 			return me().getName().copy().append(": ").append(original);
@@ -43,7 +53,7 @@ public interface IVillager<T extends PathfinderMob> {
 	public default Component fromVillager(List<String> lines) {
 		Component line = Component.literal(lines.get(me().getRandom().nextInt(lines.size())));
 		
-		if (me().getTags().contains("villagernames.named"))
+		if (me().getTags().contains("villagernames.named") && me().getCustomName() != null)
 			return me().getCustomName().copy().append(": ").append(line);
 		else
 			return me().getName().copy().append(": ").append(line);

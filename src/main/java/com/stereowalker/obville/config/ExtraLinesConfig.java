@@ -363,13 +363,45 @@ public class ExtraLinesConfig implements ConfigObject {
 			"Be careful around %s, their reputation is terrible."
 			);
 
+	@UnionConfig.Entry(name = "Villager Physical Gossip Commiseration Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager says when gossiping with someone who already knows about a crime or untrustworthy player"})
+	public List<String> villager_physical_gossip_commiseration = Lists.newArrayList(
+			"I can't believe %s is still showing their face around here...",
+			"It's a shame what happened with %s.",
+			"I'm keeping my distance from %s after what they did."
+			);
+
+	@UnionConfig.Entry(name = "Villager Gossip Commiseration Reaction Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager says in response to a commiserating gossip"})
+	public List<String> villager_gossip_reaction_commiserate = Lists.newArrayList(
+			"I know, right? Disgraceful.",
+			"I agree, we should stay away.",
+			"It's terrible, just terrible."
+			);
+
 	@UnionConfig.Entry(name = "Nice Lines", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"What a nice villager will say randomly when you interact with them"})
 	public List<String> nice_lines = Lists.newArrayList(
 			"Hello there! How can I help you today?",
 			"Good to see you! Have a look at my wares.",
 			"Greetings, friend! Lovely day we're having.",
-			"Welcome! Please, take your time."
+			"Welcome! Please, take your time.",
+			"Ah, a customer! Let's see what we can do for you.",
+			"Well met! What brings you to my humble shop?",
+			"A fine day for trading, wouldn't you agree?",
+			"I've got some new stock if you're interested!",
+			"Always a pleasure to see a friendly face around here.",
+			"Take a look around, no rush at all.",
+			"Hello! Need anything specific today?",
+			"Oh, it's you! Come to make a deal?",
+			"I was just organizing my goods. See anything you like?",
+			"Glad you stopped by! I've been hoping for some business.",
+			"My prices are fair, I promise you that!",
+			"Anything catch your eye? Just let me know.",
+			"It's a beautiful day to strike a bargain!",
+			"Good morning! Or is it afternoon? Either way, welcome!",
+			"I always have time for a good customer.",
+			"Let's see if we can make a mutually beneficial arrangement."
 			);
 
 	@UnionConfig.Entry(name = "Rude Lines", side = ConfigSide.Shared)
@@ -378,7 +410,153 @@ public class ExtraLinesConfig implements ConfigObject {
 			"What do you want?",
 			"Make it quick, I have things to do.",
 			"Are you going to buy something or just stare?",
-			"Hurry up, time is emeralds."
+			"Hurry up, time is emeralds.",
+			"I'm not running a charity here, buy something or leave.",
+			"Look, but don't touch unless you're paying.",
+			"You're blocking the light. Move.",
+			"State your business and move along.",
+			"I don't have all day. What is it?",
+			"Unless you have emeralds, stop wasting my time.",
+			"Are you lost? This is a shop, not a lounge.",
+			"Just buy something already.",
+			"I was having a decent day until you showed up.",
+			"Emeralds first, questions later.",
+			"Make a decision, I'm busy.",
+			"Don't loiter around my workstation.",
+			"You gonna buy that or just breathe on it?",
+			"My prices aren't up for debate.",
+			"If you don't like my stock, go bother someone else.",
+			"Ugh, another customer. Make it fast."
+			);
+
+	@UnionConfig.Entry(name = "No Trade Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a villager says when they have no trades to offer right now"})
+	public List<String> no_trade_lines = Lists.newArrayList(
+			"I have nothing to offer right now.",
+			"Come back later, I'm out of stock.",
+			"Sorry, I've got nothing for you today.",
+			"I'm all sold out, check back soon!",
+			"Try again tomorrow, shelves are empty.",
+			"I need to restock before we can do business.",
+			"I'm afraid I have nothing left to trade.",
+			"Cleaned me out! I've got nothing left.",
+			"Give me some time to gather more goods.",
+			"Not right now, I need to replenish my supplies.",
+			"I can't trade at the moment. Come back later.",
+			"I'm officially on break until I get more items.",
+			"You'll have to wait until I restock.",
+			"Nothing doing right now. Sorry.",
+			"I wish I could help, but I'm out of everything.",
+			"Check back in a bit, I'm currently tapped out.",
+			"I don't have the materials to trade with you yet.",
+			"Empty handed today. Apologies.",
+			"I need to work at my station before I can offer more.",
+			"Sorry friend, no trades available right now."
+			);
+
+	@UnionConfig.Entry(name = "Jobless Nice Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a nice jobless villager says when you interact with them"})
+	public List<String> jobless_nice_lines = Lists.newArrayList(
+			"Hello! I'm currently looking for work.",
+			"Greetings! I don't have a profession yet, so no trades today.",
+			"Hi there! Maybe if someone put down a workstation, I could help out.",
+			"Nice to meet you! I'm still trying to find my calling.",
+			"I'm just enjoying my free time before I settle into a career.",
+			"If only I had a job block, I'd be happy to trade with you!",
+			"Hello! I'm sort of in between jobs at the moment.",
+			"It's a nice village, but I need to find something to do.",
+			"I'd love to learn a trade, but I haven't found the right workstation.",
+			"Good to see you! Sorry I don't have anything to sell.",
+			"I'm hoping to become an expert in a profession soon!",
+			"I'm just wandering around until I find a job.",
+			"Pardon me, I'm currently unemployed but keeping my chin up!",
+			"I admire the folks who have jobs. I'll join them someday.",
+			"Hello there! Just taking a leisurely stroll.",
+			"I'm open to any profession, just need the tools!",
+			"It's relaxing having no responsibilities, but I do want to work.",
+			"Nice day, isn't it? I'm just enjoying the view.",
+			"I'll have some great trades for you once I find a profession!",
+			"Greeting! I'm a free spirit for now, but I'll find my path."
+			);
+
+	@UnionConfig.Entry(name = "Jobless Rude Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What a rude jobless villager says when you interact with them"})
+	public List<String> jobless_rude_lines = Lists.newArrayList(
+			"Can't you see I don't have a job? Stop bothering me.",
+			"I don't have any trades for you. Go away.",
+			"What do you want? I'm busy doing nothing.",
+			"No profession, no trades. Leave me alone.",
+			"Do I look like I'm selling something? Beat it.",
+			"I'm unemployed, not a tour guide.",
+			"Stop pestering me. Put down a workstation or get lost.",
+			"I have nothing for you. Go bother a merchant.",
+			"I'm not working today, or any day recently. Leave.",
+			"Why are you talking to me? I don't have anything.",
+			"I'm trying to relax here. Move along.",
+			"I don't trade. What part of that is confusing?",
+			"Are you dense? I'm jobless. Go away.",
+			"Find someone with a profession if you want to trade.",
+			"I'm not interested in whatever you're selling either.",
+			"Quit bothering the unemployed.",
+			"I'm minding my own business, you should do the same.",
+			"I don't have time for this.",
+			"You're ruining my break. Leave.",
+			"I ain't got a job, and I ain't got the patience for you."
+			);
+
+	@UnionConfig.Entry(name = "Panic Loud Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What an extrovert villager yells while running to report a crime"})
+	public List<String> panic_loud = Lists.newArrayList(
+			"THIEF! SOMEBODY HELP!",
+			"GUARDS! GUARDS! OVER HERE!",
+			"SOMEONE STOP THEM!",
+			"HEY! I JUST SAW A CRIME! SOMEONE HELP!",
+			"WHERE ARE THE GUARDS?! HELP!",
+			"I NEED TO FIND A GUARD! THIS IS AN EMERGENCY!",
+			"DID ANYONE ELSE SEE THAT?! I'M GETTING HELP!",
+			"STOP! WHAT ARE YOU DOING?! I'M TELLING THE GUARDS!",
+			"OH NO, OH NO! GUARDS! SOMEONE!",
+			"HEY! SOMEONE DO SOMETHING!"
+			);
+
+	@UnionConfig.Entry(name = "Panic Quiet Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What an introvert villager mutters while speed-walking to report a crime"})
+	public List<String> panic_quiet = Lists.newArrayList(
+			"I need to tell someone...",
+			"Oh no, oh no, oh no...",
+			"I have to find the guard...",
+			"This isn't good, I need help...",
+			"I saw that... I need to report this...",
+			"Where's the guard... I need to tell them...",
+			"Oh dear... I must find help..."
+			);
+
+	@UnionConfig.Entry(name = "Panic Murder Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What villagers scream when they witness a HIGH severity crime like murder"})
+	public List<String> panic_murder = Lists.newArrayList(
+			"MURDER! MURDER! SOMEONE HELP!",
+			"THEY KILLED THEM! HELP! SOMEONE RING THE BELL!",
+			"OH NO, THEY'RE DEAD! GUARDS! HELP US!",
+			"RUN! THEY'RE A MURDERER!",
+			"HELP! SOMEBODY PLEASE!",
+			"THEY JUST KILLED SOMEONE! HELP!",
+			"OH NO... OH NO... GUARDS! HELP! MURDER!",
+			"AAAAA! THEY KILLED THEM! SOMEONE DO SOMETHING!"
+			);
+
+	@UnionConfig.Entry(name = "Authority Report Received Lines", side = ConfigSide.Shared)
+	@UnionConfig.Comment(comment = {"What an authority figure says when a villager reports a crime to them"})
+	public List<String> authority_report_received = Lists.newArrayList(
+			"I'll handle this. Stay calm.",
+			"Thank you for telling me. I'll deal with them.",
+			"I'm on it. Get somewhere safe.",
+			"Understood. Show me where this happened.",
+			"Leave it to me. I'll find them.",
+			"I'll take care of this. Don't worry.",
+			"Good that you told me. I'll sort this out.",
+			"Stay calm, I know what to do.",
+			"I heard you. I'll deal with the criminal.",
+			"Thank you. I'll make sure they answer for this."
 			);
 }
 

@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.injection.ModifyArg;
 
 import com.stereowalker.obville.dat.OVModData;
 import com.stereowalker.obville.interfaces.IModdedEntity;
+import com.stereowalker.obville.world.entity.ai.goal.ReportCrimeGoal;
 import com.stereowalker.obville.world.entity.VillageLeader;
 
 import net.minecraft.world.entity.EntitySelector;
@@ -26,6 +27,11 @@ public abstract class AbstractVillagerMixin {
 
 	protected void registerGoals() {
 		AbstractVillager villager = (AbstractVillager) (Object) this;
+		// Register panic report goal for regular villagers (not leaders — they ARE the authority)
+		if (!(villager instanceof VillageLeader) && villager instanceof net.minecraft.world.entity.npc.Villager v) {
+			villager.goalSelector.addGoal(1, new ReportCrimeGoal(v, 1.2D));
+			villager.goalSelector.addGoal(6, new com.stereowalker.obville.world.entity.ai.goal.VillagerSandboxGoal(v, 0.6D));
+		}
 		villager.goalSelector.addGoal(3, new AvoidEntityGoal<>(villager, Player.class, (p_200828_0_) -> {
 			if (villager instanceof VillageLeader)
 				return false;

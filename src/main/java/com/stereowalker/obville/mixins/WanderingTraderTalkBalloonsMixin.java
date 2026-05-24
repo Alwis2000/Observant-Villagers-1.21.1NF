@@ -12,7 +12,7 @@ import net.minecraft.network.chat.Component;
 public abstract class WanderingTraderTalkBalloonsMixin implements com.cerbon.talk_balloons.util.mixin.ITalkBalloonsPlayer {
 
 	@Unique
-	private com.cerbon.talk_balloons.util.HistoricalData<Component> talk_balloons$balloonMessages;
+	private com.cerbon.talk_balloons.util.HistoricalData<com.cerbon.talk_balloons.util.BalloonData> talk_balloons$balloonMessages;
 
 	@Unique
 	private final java.util.Collection<java.util.function.Supplier<Boolean>> talk_balloons$queuedTickEvents = new java.util.concurrent.ConcurrentLinkedDeque<>();
@@ -20,27 +20,28 @@ public abstract class WanderingTraderTalkBalloonsMixin implements com.cerbon.tal
 	@Unique
 	private void talk_balloons$tryInitHistoricalData() {
 		if (this.talk_balloons$balloonMessages == null) {
-			this.talk_balloons$balloonMessages = new com.cerbon.talk_balloons.util.HistoricalData<>(com.cerbon.talk_balloons.TalkBalloons.config.maxBalloons);
+			this.talk_balloons$balloonMessages = new com.cerbon.talk_balloons.util.HistoricalData<>(com.cerbon.talk_balloons.TalkBalloons.config.getMaxBalloons());
 		}
 	}
 
 	@Override
 	public void talk_balloons$createBalloonMessage(Component text, int timeToRemove) {
 		this.talk_balloons$tryInitHistoricalData();
-		com.cerbon.talk_balloons.util.HistoricalData<Component> messages = this.talk_balloons$getBalloonMessages();
+		com.cerbon.talk_balloons.util.HistoricalData<com.cerbon.talk_balloons.util.BalloonData> messages = this.talk_balloons$getBalloonMessages();
 		java.util.concurrent.atomic.AtomicInteger currentTick = new java.util.concurrent.atomic.AtomicInteger(0);
+		com.cerbon.talk_balloons.util.BalloonData balloonData = com.cerbon.talk_balloons.util.BalloonData.create(text, timeToRemove);
 		this.talk_balloons$queuedTickEvents.add(() -> {
 			if (currentTick.getAndIncrement() >= timeToRemove) {
-				messages.remove(text);
+				messages.remove(balloonData);
 				return true;
 			}
 			return false;
 		});
-		messages.add(text);
+		messages.add(balloonData);
 	}
 
 	@Override
-	public com.cerbon.talk_balloons.util.HistoricalData<Component> talk_balloons$getBalloonMessages() {
+	public com.cerbon.talk_balloons.util.HistoricalData<com.cerbon.talk_balloons.util.BalloonData> talk_balloons$getBalloonMessages() {
 		this.talk_balloons$tryInitHistoricalData();
 		return this.talk_balloons$balloonMessages;
 	}

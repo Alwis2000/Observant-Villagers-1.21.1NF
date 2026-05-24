@@ -184,7 +184,7 @@ public class ModEvents {
 				} else if (event.getState().getBlock() == Blocks.TORCH
 						|| event.getState().getBlock() == Blocks.WALL_TORCH) {
 					r.run();
-				} else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
+				} else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity) {
 					r.run();
 				} else if (block == Blocks.LECTERN)
 					r.run();
@@ -459,7 +459,7 @@ public class ModEvents {
 							broke.run();
 						else
 							replace.run();
-					} else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity bell) {
+					} else if (event.getLevel().getBlockEntity(event.getPos()) instanceof BellBlockEntity) {
 						if (ObVille.upsetNearby(spl, spl.blockPosition(), true, 0,
 								() -> new Crime(Laws.BREAKING_BELLS, new ItemStack(Items.BELL, 2))))
 							broke.run();

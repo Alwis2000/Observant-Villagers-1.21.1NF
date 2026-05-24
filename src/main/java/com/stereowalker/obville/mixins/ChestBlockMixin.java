@@ -48,7 +48,7 @@ public abstract class ChestBlockMixin extends AbstractChestBlock<ChestBlockEntit
 					System.out.println("C1 " + ((ICombinedBlock) compound).getContainer1() + " C2 "
 							+ ((ICombinedBlock) compound).getContainer2());
 					if (((ICombinedBlock) compound).getContainer1() instanceof ChestBlockEntity chest) {
-						BlockPos p1 = chest.getBlockPos();
+
 						BlockPos p2 = null;
 						if (((ICombinedBlock) compound).getContainer2() instanceof ChestBlockEntity chest2) {
 							p2 = chest2.getBlockPos();

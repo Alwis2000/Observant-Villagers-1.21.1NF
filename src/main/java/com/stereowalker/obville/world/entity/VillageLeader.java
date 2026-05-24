@@ -190,8 +190,7 @@ public class VillageLeader extends Villager implements IPlayerFollower, IInvesti
 
 	@Override
 	public void setTradingPlayer(Player pPlayer) {
-		if (pPlayer != null && !this.level().isClientSide && redemptionTradesPerformed > 0 && getTradingPlayer() != null
-				&& pPlayer == null) {
+		if (pPlayer == null && !this.level().isClientSide && redemptionTradesPerformed > 0 && getTradingPlayer() != null) {
 			Component cleanMessage = Component.literal(
 					ObVille.LINES_CONFIG.leader_lines.get(random.nextInt(ObVille.LINES_CONFIG.leader_lines.size())));
 			Component message = cleanMessage;

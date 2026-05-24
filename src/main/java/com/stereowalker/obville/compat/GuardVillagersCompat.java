@@ -33,6 +33,7 @@ public class GuardVillagersCompat {
 	
 	public static void wit(Player player, List<LivingEntity> angeredEntities, Crime crimeCommited) {
 		if (angeredEntities.get(0) instanceof Guard guard && crimeCommited != null && crimeCommited.lawBroken.isPardonable()) {
+			@SuppressWarnings("unchecked")
 			IVillager<Guard> vg = (IVillager<Guard>)guard;
 			if (!vg.crimesWitnessed().containsKey(player.getUUID()))
 				vg.crimesWitnessed().put(player.getUUID(), 0);
@@ -54,5 +55,9 @@ public class GuardVillagersCompat {
 		if (liv instanceof Guard guard) {
 			guard.setTarget(player);
 		}
+	}
+	
+	public static List<? extends LivingEntity> findNearbyGuards(LivingEntity searcher) {
+		return searcher.level().getEntitiesOfClass(Guard.class, searcher.getBoundingBox().inflate(32.0));
 	}
 }

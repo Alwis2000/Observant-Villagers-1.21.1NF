@@ -23,7 +23,7 @@ import net.minecraft.world.entity.raid.Raid;
 public abstract class RaidMixin {
 	
 	@Inject(method = "tick", locals = LocalCapture.CAPTURE_FAILHARD, at = @At(value= "INVOKE", target = "Lnet/minecraft/server/level/ServerPlayer;awardStat(Lnet/minecraft/resources/ResourceLocation;)V"))
-	private void tickInject(CallbackInfo ci,  boolean flag, int i, boolean flag3, int k, Iterator var5, UUID uuid, Entity entity, LivingEntity livingentity, ServerPlayer serverplayer) {			
+	private void tickInject(CallbackInfo ci,  boolean flag, int i, boolean flag3, int k, Iterator<?> var5, UUID uuid, Entity entity, LivingEntity livingentity, ServerPlayer serverplayer) {			
 		new ClientboundSoundPacket(true, serverplayer.getUUID()).send(serverplayer);
 		((IModdedEntity)serverplayer).getData().incrementReputation(ObVille.REPUTATION_CONFIG.raid_defence);
 		VillageData.invalidateGounty(serverplayer);

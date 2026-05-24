@@ -18,7 +18,7 @@ public class ModConfig implements ConfigObject {
 	
 	@UnionConfig.Entry(name = "One Liners", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"Villagers say their lines once when they dont trust you and never say anything again"})
-	public boolean one_liners = true;
+	public boolean one_liners = false;
 	
 	@UnionConfig.Entry(name = "Reputaion Recovery Window", side = ConfigSide.Shared)
 	@UnionConfig.Comment(comment = {"If you speak to a villager when you were distrusted and interact with them again, how much time should pass before they're willing to trade again","This is counted in ticks and 20 ticks is 1 second"})

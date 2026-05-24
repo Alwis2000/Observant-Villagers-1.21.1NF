@@ -5,12 +5,17 @@ import java.util.List;
 import java.util.Optional;
 
 import com.stereowalker.obville.Crime;
+import com.stereowalker.obville.ObVille;
 import com.stereowalker.obville.world.effect.Effects;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.ThrownPotion;
 import net.minecraft.world.item.ItemStack;
@@ -25,6 +30,34 @@ public interface IInvestigator {
 
 	public void setInvestigatePos(BlockPos pos);
 	public void crimeToInvestigate(Crime crime);
+	
+	/**
+	 * Called when a panicking villager reaches this authority and reports a crime.
+	 * This triggers the actual consequences (reputation hit, blacklist, guard follow).
+	 */
+	public default void onReportReceived(Mob self, Villager reporter, Player criminal, Crime crime) {
+		if (criminal instanceof ServerPlayer serverPlayer) {
+			// Apply the actual consequences now that the report has landed
+			ObVille.upsetNearby(criminal, false, () -> crime);
+			
+			// Authority says a response line
+			String responseLine = ObVille.LINES_CONFIG.authority_report_received.get(
+				self.getRandom().nextInt(ObVille.LINES_CONFIG.authority_report_received.size()));
+			Component cleanMessage = Component.literal(responseLine);
+			Component message;
+			if (self.getTags().contains("villagernames.named") && self.getCustomName() != null)
+				message = self.getCustomName().copy().append(": ").append(cleanMessage);
+			else
+				message = self.getName().copy().append(": ").append(cleanMessage);
+			new com.stereowalker.obville.network.protocol.game.ClientboundVillagerMessagePacket(
+				message, criminal.getUUID(), self, cleanMessage).send(serverPlayer);
+			
+			// If this is a guard/leader with IPlayerFollower, start following the criminal
+			if (self instanceof IPlayerFollower follower) {
+				follower.follow(criminal);
+			}
+		}
+	}
 	
 	/**
 	 * Attack the specified entity using a ranged attack.

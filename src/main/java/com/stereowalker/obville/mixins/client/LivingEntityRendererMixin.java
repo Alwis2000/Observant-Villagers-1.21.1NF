@@ -26,15 +26,15 @@ public abstract class LivingEntityRendererMixin {
 		if (entity instanceof ITalkBalloonsPlayer talkEntity) {
 			if (talkEntity.talk_balloons$getBalloonMessages() != null && !talkEntity.talk_balloons$getBalloonMessages().isEmpty()) {
 				Font font = ((EntityRenderer<?>) (Object) this).getFont();
-				org.joml.Quaternionf cameraOrientation = Minecraft.getInstance().getEntityRenderDispatcher().cameraOrientation();
-				BalloonRenderer.renderBalloons(
+				BalloonRenderer.submitBalloons(
 						poseStack,
-						buffer,
-						BalloonRenderer.toEulerXyzDegrees(cameraOrientation),
+						Minecraft.getInstance().getEntityRenderDispatcher().camera.getYRot(),
 						font,
 						talkEntity.talk_balloons$getBalloonMessages(),
 						entity.getBbHeight(),
-						com.cerbon.talk_balloons.client.TalkBalloonsClient.syncedConfigs.getPlayerConfig(entity.getUUID())
+						entity.isCrouching(),
+						com.cerbon.talk_balloons.client.TalkBalloonsClient.syncedConfigs.getPlayerConfig(entity.getUUID()),
+						packedLight
 				);
 			}
 		}

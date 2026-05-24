@@ -77,7 +77,6 @@ public interface ISheep {
 
 	@Nullable
 	private BlockPos findSpawnPositionForLeaderInColumn(BlockPos pVillagerPos, double pOffsetX, double pOffsetZ) {
-		int i = 6;
 		BlockPos blockpos = pVillagerPos.offset((int) pOffsetX, 6, (int) pOffsetZ);
 		BlockState blockstate = villager().level().getBlockState(blockpos);
 
@@ -86,7 +85,7 @@ public interface ISheep {
 			BlockState blockstate1 = blockstate;
 			blockpos = blockpos.below();
 			blockstate = villager().level().getBlockState(blockpos);
-			if ((blockstate1.isAir() || !blockstate1.getFluidState().isEmpty()) && blockstate.isSolid()) {
+			if ((blockstate1.isAir() || !blockstate1.getFluidState().isEmpty()) && blockstate.isSolidRender(villager().level(), blockpos)) {
 				return blockpos1;
 			}
 		}
